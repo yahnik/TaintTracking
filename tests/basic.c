@@ -1,8 +1,10 @@
 #include <stdio.h>
-
+ 
 int main() {
 
-    int x = 4;
+    int x;
+    scanf("%d", &x);
+
     int y = 5;
     int z = x * y;
     z++;

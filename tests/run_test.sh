@@ -14,7 +14,7 @@ clang -emit-llvm -o $testname.bc -c $testname.c ||
 echo "======================================================="
 echo "Running pass..."
 echo ""
-opt -load $PROJ_OBJ_ROOT/Release+Asserts/lib/TaintTracking.so -TaintTracking < $testname.bc > /dev/null ||
+opt -load $PROJ_OBJ_ROOT/Release+Asserts/lib/TaintTracking.so -TaintTracking < $testname.bc > $testname.tt.bc ||
     { echo "Failed to run Taint Tracking pass."; exit 1; }
 echo ""
 
