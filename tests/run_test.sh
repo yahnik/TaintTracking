@@ -16,6 +16,9 @@ echo "Running pass..."
 echo ""
 opt -load $PROJ_OBJ_ROOT/Release+Asserts/lib/TaintTracking.so -TaintTracking < $testname.bc > $testname.tt.bc ||
     { echo "Failed to run Taint Tracking pass."; exit 1; }
+
+llvm-dis $testname.tt.bc
+    
 echo ""
 
 llc $testname.bc -o $testname.s

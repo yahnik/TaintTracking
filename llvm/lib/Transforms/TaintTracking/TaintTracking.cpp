@@ -33,9 +33,15 @@ using namespace llvm;
 
 namespace {
 
-    // Map Value* objects to the memory address that their taint value
-    // is stored at.
+    // Map Value* objects (registers) to the memory address that their 
+    // taint value is stored at.
     std::map<Value*,Value*> RegToTaintVal;
+
+    // Map Value* objects (memory addresses) to the memory address that
+    // their taint value is stored at.
+    std::map<Value*,Value*> AddrToTaintAddr;
+
+    // Iterator that can be used with the above maps.
     std::map<Value*,Value*>::iterator ValToValIt;
 
     // The 1-bit integer type we will use to store taint values.
@@ -47,93 +53,137 @@ namespace {
         static char ID; // Pass identification, replacement for typeid
         TaintTracking() : FunctionPass(ID) {}
 
-        
+
         /* InstVisitor sub-struct that implements how to handle taint 
          * tracking for different types of instructions.
          */
         struct TaintInstVisitor : public InstVisitor<TaintInstVisitor> {
 
             void visitLoadInst(LoadInst &I) {
-                errs() << "Found a load: " << I << "\n";
 
-                for(User::op_iterator opIt = I.op_begin(); opIt != I.op_end(); opIt++) {
-                    errs() << "\tOperand: " << *opIt << "\n";
-                }
+                // Load the taint value for the load's address operand.
+                Value* opTaintVal = getMemOpTaintVal(I.getPointerOperand(),I);
+                
+                BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
+                                            opTaintVal,
+                                            ConstantInt::get(TaintIntType,0,false),
+                                            "mem_or",
+                                            &I);
+
+                RegToTaintVal[&I] = orInst;
             }
+
 
             void visitStoreInst(StoreInst &I) {
-                errs() << "Found a store: " << I << "\n";
 
-                for(User::op_iterator opIt = I.op_begin(); opIt != I.op_end(); opIt++) {
-                    errs() << "\tOperand: " << *opIt << "\n";
-                }  
+                // Allocate space on the stack to store the source reg's
+                // taint value so we can later load it.
+                Value* taintStoreAddr = 
+                    getTaintAddrForMemAddr(I.getPointerOperand());
+                   
+                if(taintStoreAddr == NULL) {
+                    // Don't have a taint value in memory for this address.
+                    // Need to allocate memory to store it now. 
+                    taintStoreAddr = new AllocaInst(TaintIntType, 
+                                                    "taint_store",
+                                                    &I);
+                    AddrToTaintAddr[I.getPointerOperand()] = taintStoreAddr;
+                }
+               
+                Value* regTaintVal = getRegOpTaintVal(I.getValueOperand());
+
+                StoreInst *taintStore = new StoreInst(regTaintVal,
+                                                      taintStoreAddr,
+                                                      false,
+                                                      &I);
             }
+
 
             void visitPHINode(PHINode &I) {
                 errs() << "Found a PHI Node.\n";
             }
 
+
             void visitBinaryOperator(BinaryOperator &I) {
-                errs() << "Found binary op: " << I << "\n";
 
                 Value* opA = I.getOperand(0);
                 Value* opB = I.getOperand(1);
 
-
-                /*
-                 * For each operand:
-                 *      -check if that operand has an entry in the RegToTaintVal map
-                 *      -if yes, add a load instruction to load the value of that 
-                 *       operand's taint
-                 *      -add a compare instruction that will compare the taint of the
-                 *       two operands' taint values (or the constant '0' for any 
-                 *       instruction that doesn't have an entry in the RegToTaintVal map.
-                 */
-
                 // Look up where the taint values for these two Value* objects
                 // are stored.
-                Value* opATaint;
-                Value* opBTaint;
-                ValToValIt = RegToTaintVal.find(opA); 
-                if(ValToValIt != RegToTaintVal.end()) {
-                    errs() << "a1\n";
-                    opATaint = ValToValIt->second;
-                }
-                else {
-                    // The operand for our current instruction isn't in the taint map.
-                    // Therefore, it has never been seen before (and can't possible be
-                    // tainted). It could also be something like a constant that also
-                    // won't be tainted.
-                     errs() << "a2\n";
-                     opATaint = ConstantInt::get(TaintIntType,0,false); 
-                } 
-
-                ValToValIt = RegToTaintVal.find(opB); 
-                if(ValToValIt != RegToTaintVal.end()) {
-                    errs() << "b1\n";
-                    opBTaint = ValToValIt->second;
-                }
-                else {
-                    errs() << "b2\n";
-                    opBTaint = ConstantInt::get(TaintIntType,0,false); 
-                }
+                Value* opATaint = getRegOpTaintVal(opA);
+                Value* opBTaint = getRegOpTaintVal(opB);
 
                 assert(opATaint->getType() == opBTaint->getType() &&
                         "Ops to OR instruction do not match!");
-                
+
                 // Create OR instruction between two taint values.
                 BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
-                                                                opATaint,
-                                                                opBTaint,
-                                                                "or",
-                                                                &I);
+                        opATaint,
+                        opBTaint,
+                        "bin_or",
+                        &I);
 
-               errs() << "Inserting => " << *orInst << "\n"; 
-
+                // The BinaryOperator instruction is now the taint value for 
+                // instruction I; add it to the map.
+                RegToTaintVal[&I] = orInst;
             }
 
+            
             void visitInstruction(Instruction &I) {
                 errs() << "Unknow instruction of type: " << I.getOpcodeName() << "\n";
+            }
+
+                
+            // If we have seen this memory address before, its taint value
+            // will be a load from the taint address for this instruction.
+            // Otherwise, its taint is simple '0'.
+            Value* getMemOpTaintVal(Value* addrOp, Instruction &I) {
+
+               Value* taintValAddr = getTaintAddrForMemAddr(addrOp);
+                if(taintValAddr == NULL) 
+                    return ConstantInt::get(TaintIntType,0,false); 
+
+                // Create a load instruction to load taint value from memory.
+                LoadInst* loadInst = new LoadInst(taintValAddr,"taint_load",&I);
+                return loadInst;
+            }
+
+
+            // Finds the memory address that holds the taint value for the
+            // data stored at memAddr. Returns NULL if memAddr has no
+            // associated taint value in memory.
+            Value* getTaintAddrForMemAddr(Value* memAddr) {
+
+                ValToValIt = AddrToTaintAddr.find(memAddr); 
+                if(ValToValIt == AddrToTaintAddr.end()) {
+                    return NULL; 
+                }
+
+                return ValToValIt->second;
+            }
+
+
+            // Returns the taint value for a register (if it has one), or the 
+            // constant '0' otherwise.
+            Value* getRegOpTaintVal(Value* regOp) {
+
+                Value* regOpTaintVal;
+
+                ValToValIt = RegToTaintVal.find(regOp); 
+                if(ValToValIt != RegToTaintVal.end()) {
+                    errs() << "Found existing taint value.\n";
+                    regOpTaintVal = ValToValIt->second;
+                }
+                else {
+                    // The regOperand for our current instruction isn't in the taint map.
+                    // Therefore, it has never been seen before (and can't possible be
+                    // tainted). It could also be something like a constant that also
+                    // won't be tainted.
+                    regOpTaintVal = ConstantInt::get(TaintIntType,0,false); 
+                }
+
+                return regOpTaintVal;
             }
         };
 
@@ -142,7 +192,7 @@ namespace {
         // for each type of instruction.
         TaintInstVisitor TaintVis;
 
-        
+
         virtual bool runOnFunction(Function &F) {
 
             TaintIntType = IntegerType::get(F.getContext(),1);
@@ -158,6 +208,7 @@ namespace {
 
             return false;
         }
+
 
         // We don't modify the program, so we preserve all analyses
         virtual void getAnalysisUsage(AnalysisUsage &AU) const {

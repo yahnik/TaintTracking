@@ -1,0 +1,5 @@
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+
+	Node0x2755b40 [shape=record,label="{entry:\l  %retval = alloca i32, align 4\l  %x = alloca i32, align 4\l  %y = alloca i32, align 4\l  %z = alloca i32, align 4\l  store i32 0, i32* %retval\l  %call = call i32 (i8*, ...)* @__isoc99_scanf(i8* getelementptr inbounds ([3 x i8]* @.str, i32 0, i32 0), i32* %x)\l  store i32 5, i32* %y, align 4\l  %0 = load i32* %x, align 4\l  %1 = load i32* %y, align 4\l  %mul = mul nsw i32 %0, %1\l  store i32 %mul, i32* %z, align 4\l  %2 = load i32* %z, align 4\l  %inc = add nsw i32 %2, 1\l  store i32 %inc, i32* %z, align 4\l  %3 = load i32* %z, align 4\l  %call1 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([8 x i8]* @.str1, i32 0, i32 0), i32 %3)\l  ret i32 0\l}"];
+}

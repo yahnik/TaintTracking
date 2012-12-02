@@ -1,8 +1,15 @@
 #include <stdio.h>
-
-using namespace std;
-
+ 
 int main() {
 
-    fprintf("Hello World.\n");
+    int x;
+    scanf("%d", &x);
+
+    int y = 5;
+    int z = x * y;
+    z++;
+
+    printf("Z = %i\n", z);
+
+    return 0;
 }
