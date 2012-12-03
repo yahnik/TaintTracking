@@ -20,7 +20,7 @@ main:                                   # @main
 	movl	$.L.str, %edi
 	xorb	%al, %al
 	callq	printf
-	xorl	%eax, %eax
+	movl	8(%rsp), %eax
 	addq	$24, %rsp
 	ret
 .Ltmp2:

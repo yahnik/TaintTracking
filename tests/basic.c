@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
  
 int main() {
@@ -8,6 +9,6 @@ int main() {
     z++;
 
     printf("Z = %i\n", z);
-
-    return 0;
+    //exit(0);
+    return z;
 }

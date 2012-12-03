@@ -11,7 +11,7 @@ entry:
   %y = alloca i32, align 4
   %z = alloca i32, align 4
   %taint_store = alloca i1
-  store i1 false, i1* %taint_store
+  store i1 true, i1* %taint_store
   store i32 0, i32* %retval
   %taint_store1 = alloca i1
   store i1 false, i1* %taint_store1
@@ -41,7 +41,19 @@ entry:
   %mem_or10 = or i1 %taint_load9, false
   %3 = load i32* %z, align 4
   %call = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([8 x i8]* @.str, i32 0, i32 0), i32 %3)
-  ret i32 0
+  %taint_load11 = load i1* %taint_store5
+  %mem_or12 = or i1 %taint_load11, false
+  %4 = load i32* %z, align 4
+  %taint_check = icmp eq i1 %mem_or12, true
+  br i1 %taint_check, label %abortBB, label %cont_BB
+
+cont_BB:                                          ; preds = %entry
+  ret i32 %4
+
+abortBB:                                          ; preds = %abortBB, %entry
+  br label %abortBB
 }
 
 declare i32 @printf(i8*, ...)
+
+declare i32 @exit()

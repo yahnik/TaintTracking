@@ -1,5 +1,7 @@
 #!/bin/bash
 
+clear
+
 # make sure most up-to-date TaintTracking.so file is in build directory.
 cp $PROJ_SRC_ROOT/Release+Asserts/lib/TaintTracking.so $PROJ_OBJ_ROOT/Release+Asserts/lib
 
@@ -18,7 +20,8 @@ opt -load $PROJ_OBJ_ROOT/Release+Asserts/lib/TaintTracking.so -TaintTracking < $
     { echo "Failed to run Taint Tracking pass."; exit 1; }
 
 llvm-dis $testname.tt.bc
-    
+opt -dot-cfg $testname.tt.bc >& /dev/null
+
 echo ""
 
 llc $testname.bc -o $testname.s
@@ -32,7 +35,7 @@ echo ""
 echo "======================================================="
 echo ""
 
-#===============================================================
+#==============================================================
 # Old code (what stuff below do we actually need?)
 #===============================================================
 

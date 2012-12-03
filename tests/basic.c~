@@ -1,15 +1,14 @@
+#include <stdlib.h>
 #include <stdio.h>
  
 int main() {
 
-    int x;
-    scanf("%d", &x);
-
+    int x = 6;
     int y = 5;
     int z = x * y;
     z++;
 
     printf("Z = %i\n", z);
-
-    return 0;
+    exit(0);
+    return z;
 }
