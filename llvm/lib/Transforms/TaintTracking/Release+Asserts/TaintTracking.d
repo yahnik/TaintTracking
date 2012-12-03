@@ -69,7 +69,9 @@
  /home/dan/projects/TaintTracking/llvm/include/llvm/Support/Allocator.h \
  /home/dan/projects/TaintTracking/llvm/include/llvm/Support/AlignOf.h \
  /home/dan/projects/TaintTracking/llvm/include/llvm/Support/Recycler.h \
- /home/dan/projects/TaintTracking/llvm/include/llvm/CodeGen/MachineFunctionPass.h
+ /home/dan/projects/TaintTracking/llvm/include/llvm/CodeGen/MachineFunctionPass.h \
+ /home/dan/projects/TaintTracking/llvm/include/llvm/Transforms/Utils/BasicBlockUtils.h \
+ /home/dan/projects/TaintTracking/llvm/include/llvm/Support/CFG.h
 
 /home/dan/projects/TaintTracking/llvm/include/llvm/Pass.h:
 
@@ -208,3 +210,7 @@
 /home/dan/projects/TaintTracking/llvm/include/llvm/Support/Recycler.h:
 
 /home/dan/projects/TaintTracking/llvm/include/llvm/CodeGen/MachineFunctionPass.h:
+
+/home/dan/projects/TaintTracking/llvm/include/llvm/Transforms/Utils/BasicBlockUtils.h:
+
+/home/dan/projects/TaintTracking/llvm/include/llvm/Support/CFG.h:

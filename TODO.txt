@@ -1,0 +1,7 @@
+1) Figure out how to only instrument functions that are defined in the source
+   code of the test program we are running.
+
+2) Make sure we are calling exit() correctly.
+
+3) Add instruction to print warning message in abortBB.
+

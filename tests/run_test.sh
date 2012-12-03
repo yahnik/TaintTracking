@@ -24,14 +24,16 @@ opt -dot-cfg $testname.tt.bc >& /dev/null
 
 echo ""
 
-llc $testname.bc -o $testname.s
+llc $testname.tt.bc -o $testname.s
 
 g++ -o $testname.tt.exe $testname.s || { echo "Failed to build executable."; exit 1; }
 
 echo "======================================================="
 echo "Executing program..."
 echo ""
-./$testname.tt.exe
+execStatement="./$testname.tt.exe"
+`expr "$execStatement"`
+echo "Program Return Value = $?"
 echo "======================================================="
 echo ""
 

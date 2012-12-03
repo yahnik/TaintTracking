@@ -4,11 +4,5 @@
 int main() {
 
     int x = 6;
-    int y = 5;
-    int z = x * y;
-    z++;
-
-    printf("Z = %i\n", z);
-    //exit(0);
-    return z;
+    return x;
 }

@@ -49,9 +49,6 @@ namespace {
     // The 1-bit integer type we will use to store taint values.
     IntegerType* TaintIntType;
 
-    // Temp bool to auto-taint the first register we see.
-    bool isFirstReg = true;
-
     // Pointer to the abort basic block.
     BasicBlock* abortBB;
 
@@ -100,7 +97,7 @@ namespace {
                                                     &I);
                     AddrToTaintAddr[I.getPointerOperand()] = taintStoreAddr;
                 }
-               
+             
                 Value* regTaintVal = getRegOpTaintVal(I.getValueOperand());
 
                 StoreInst *taintStore = new StoreInst(regTaintVal,
@@ -146,9 +143,6 @@ namespace {
             void visitReturnInst(ReturnInst &I) {
 
                 BasicBlock* orig = I.getParent();
-                TerminatorInst* term;
-                term = orig->getTerminator();
-                if(term == NULL) errs() << orig->getName() << " is fucked.\n";
 
                 Value* retVal = I.getReturnValue();
                 Value* retTaint = getRegOpTaintVal(retVal);
@@ -224,19 +218,16 @@ namespace {
                 ValToValIt = RegToTaintVal.find(regOp); 
                 if(ValToValIt != RegToTaintVal.end()) {
                     regOpTaintVal = ValToValIt->second;
-                    //errs() << "Found existing taint value: " << regOpTaintVal << "\n";
                 }
                 else {
                     // The regOperand for our current instruction isn't in the taint map.
                     // Therefore, it has never been seen before (and can't possible be
                     // tainted). It could also be something like a constant that also
                     // won't be tainted.
-                    if(isFirstReg) {
-                        regOpTaintVal = ConstantInt::get(TaintIntType,1,false); 
-                        isFirstReg = false;
-                    }
-                    else
-                        regOpTaintVal = ConstantInt::get(TaintIntType,0,false); 
+                    
+                    // TODO: this should be '0', '1' is just for initial
+                    // testing.
+                    regOpTaintVal = ConstantInt::get(TaintIntType,0,false); 
 
                 }
 
@@ -261,34 +252,29 @@ namespace {
             for(Module::iterator m = M.begin(); m != M.end(); m++) {
                 Function* F = m;
  
-                                
                 // TODO: figure out how to only call createAbortBB on functions
                 // defined inside of the source code.
                 if(F->getName() != "main") continue; 
-                 
-                errs() << "Handling function: " << F->getName() << "\n";
-   
+                //errs() << "Handling function: " << F->getName() << "\n";
                 createAbortBB(M,*F);
 
                 std::vector<Instruction*> funcInstList;
 
                 for(Function::iterator b = F->begin(); b != F->end(); b++) {
                     
-                                        
-                    errs() << "\nBasicBlock: " << b->getName() << "\n\n";
+                    // We don't need to worry about tracking anything in the
+                    // abortBB.                    
                     if(b->getName() == "abortBB") continue; 
-
 
                     for(BasicBlock::iterator i = b->begin(); i != b->end(); i++) {
                         funcInstList.push_back(i);
                     }
-
                 }    
                 
                 for(std::vector<Instruction*>::iterator instIt = funcInstList.begin();
                         instIt != funcInstList.end(); instIt++) {
                     Instruction* inst = *instIt;
-                    errs() << "visitng: " << *inst << "\n";
+                    //errs() << "visitng: " << *inst << "\n";
                     TaintVis.visit(*inst);
                 }
  
@@ -297,62 +283,38 @@ namespace {
         }
 
 
-        // TODO: clean up this function once it seems to be working.
+        // Function to create a BasicBlock that is used to warn user when a 
+        // tainted value is being used for output, then exits the program.
         void createAbortBB(Module &M, Function &F) {
 
-
+            // This will be the block that is branched to if a taint value
+            // is being used for some type of output.
             abortBB = BasicBlock::Create(F.getContext(),
                                          "abortBB",
                                          &F,
                                          NULL);
 
-
+            // Create instruction to call exit.
             Constant* lookup = M.getOrInsertFunction("exit",
                                                      IntegerType::get(F.getContext(),32),
                                                      NULL);
-
             assert(lookup != NULL && "Could not find exit function!");
        
             Function* exitFunc = cast<Function>(lookup);
             Function::ArgumentListType* list = &(exitFunc->getArgumentList());
             std::vector<Value*> args;
-            args.push_back(ConstantInt::get(Type::getInt1Ty(M.getContext()),-1));
+            //args.push_back(ConstantInt::get(Type::getInt1Ty(M.getContext()),-1));
 
+            // Insert a dummy branch to be the terminator of abortBB.
             BranchInst *br = BranchInst::Create(abortBB,abortBB); 
-            TerminatorInst* term = abortBB->getTerminator();
-            if(term != NULL) errs() << "term: " << *term << "\n";
-            else errs() << "term is null\n"; 
-/*
+
             CallInst *callExit = CallInst::Create(exitFunc,
                                                   args,
                                                   "exit",
                                                   abortBB->getTerminator());
-*/
 
-            // Create a branch back to abortBB (not logical, but we are calling exit
-            // so this branch will never be taken.
-            //abortBB->getTerminator()->eraseFromParent();
-            
             assert(abortBB->getTerminator() != NULL && 
                     "AbortBB has no terminator!"); 
-          
-            for(BasicBlock::iterator it = abortBB->begin(); it != abortBB->end(); it++) {
-                errs() << *it;
-                if(it->isTerminator()) errs() << "\tTERM";
-                errs() << "\n";
-    
-            }
-
-            /*
-            InvokeInst *invExit = InvokeInst::Create(exitFunc,
-                                                     abortBB,
-                                                     abortBB,
-                                                     args,
-                                                     "exit",
-                                                     abortBB);
-
-            errs() << "Invoke instruction: " << *invExit << "\n";
-            */
         }
 
 

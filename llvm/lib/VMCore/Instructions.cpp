@@ -521,6 +521,10 @@ void InvokeInst::init(Value *Fn, BasicBlock *IfNormal, BasicBlock *IfException,
   FunctionType *FTy =
     cast<FunctionType>(cast<PointerType>(Fn->getType())->getElementType());
 
+    errs() << "Args.size(): " << Args.size() << "\n";
+    errs() << "Num params: " << FTy->getNumParams() << "\n";
+    errs() << "bool: " << FTy->isVarArg() << "\n";
+
   assert(((Args.size() == FTy->getNumParams()) ||
           (FTy->isVarArg() && Args.size() > FTy->getNumParams())) &&
          "Invoking a function with bad signature");
