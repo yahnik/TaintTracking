@@ -1,7 +1,9 @@
-1) Figure out how to only instrument functions that are defined in the source
-   code of the test program we are running.
+- Make sure we are calling exit() correctly.
 
-2) Make sure we are calling exit() correctly.
+- Add instruction to print warning message in abortBB.
 
-3) Add instruction to print warning message in abortBB.
+- Track across PHI nodes
 
+- Track across function calls
+
+- How to define sinks and sources?

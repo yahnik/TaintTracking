@@ -9,11 +9,11 @@ main:                                   # @main
 	subq	$24, %rsp
 .Ltmp1:
 	.cfi_def_cfa_offset 32
-	movb	$0, 7(%rsp)
+	movb	$1, 7(%rsp)
 	movl	$0, 20(%rsp)
-	movb	$0, 6(%rsp)
+	movb	$1, 6(%rsp)
 	movl	$6, 16(%rsp)
-	movb	$0, 5(%rsp)
+	movb	$1, 5(%rsp)
 	movl	$5, 12(%rsp)
 	movb	5(%rsp), %cl
 	movb	6(%rsp), %al
@@ -23,6 +23,7 @@ main:                                   # @main
 	movb	%al, 4(%rsp)
 	leal	(%rcx,%rcx,4), %eax
 	movl	%eax, 8(%rsp)
+	movb	$1, 4(%rsp)
 	leal	1(%rcx,%rcx,4), %esi
 	movl	%esi, 8(%rsp)
 	movl	$.L.str, %edi

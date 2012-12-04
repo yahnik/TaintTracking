@@ -7,7 +7,7 @@ entry:
   %retval = alloca i32, align 4
   %x = alloca i32, align 4
   %taint_store = alloca i1
-  store i1 true, i1* %taint_store
+  store i1 false, i1* %taint_store
   store i32 0, i32* %retval
   %taint_store1 = alloca i1
   store i1 false, i1* %taint_store1

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-clear
 
 # make sure most up-to-date TaintTracking.so file is in build directory.
 cp $PROJ_SRC_ROOT/Release+Asserts/lib/TaintTracking.so $PROJ_OBJ_ROOT/Release+Asserts/lib
@@ -16,11 +15,16 @@ clang -emit-llvm -o $testname.bc -c $testname.c ||
 echo "======================================================="
 echo "Running pass..."
 echo ""
-opt -load $PROJ_OBJ_ROOT/Release+Asserts/lib/TaintTracking.so -TaintTracking < $testname.bc > $testname.tt.bc ||
+
+opt -mem2reg $testname.bc > $testname.reg.bc
+
+opt -load $PROJ_OBJ_ROOT/Release+Asserts/lib/TaintTracking.so -TaintTracking < $testname.reg.bc > $testname.tt.bc ||
     { echo "Failed to run Taint Tracking pass."; exit 1; }
 
 llvm-dis $testname.tt.bc
 opt -dot-cfg $testname.tt.bc >& /dev/null
+
+mv *.dot graphs/
 
 echo ""
 

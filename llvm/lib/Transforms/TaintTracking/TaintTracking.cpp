@@ -75,7 +75,7 @@ namespace {
                 BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
                                             opTaintVal,
                                             ConstantInt::get(TaintIntType,0,false),
-                                            "mem_or",
+                                            "loadT",
                                             &I);
 
                 RegToTaintVal[&I] = orInst;
@@ -88,12 +88,12 @@ namespace {
                 // taint value so we can later load it.
                 Value* taintStoreAddr = 
                     getTaintAddrForMemAddr(I.getPointerOperand());
-                   
+                
                 if(taintStoreAddr == NULL) {
                     // Don't have a taint value in memory for this address.
                     // Need to allocate memory to store it now. 
                     taintStoreAddr = new AllocaInst(TaintIntType, 
-                                                    "taint_store",
+                                                    "storeT",
                                                     &I);
                     AddrToTaintAddr[I.getPointerOperand()] = taintStoreAddr;
                 }
@@ -104,12 +104,44 @@ namespace {
                                                       taintStoreAddr,
                                                       false,
                                                       &I);
+ 
             }
 
 
             void visitPHINode(PHINode &I) {
-               // errs() << "Found a PHI Node.\n";
-            }
+           
+                int numPhiVals = I.getNumIncomingValues();
+                PHINode* taintPHI = PHINode::Create(TaintIntType,
+                                                    I.getNumIncomingValues(),
+                                                    "taintPHI",
+                                                    &I);
+                
+                for(int i = 0; i < numPhiVals; i++) {
+                    Value* phiV = I.getIncomingValue(i);
+                    BasicBlock* srcBB = I.getIncomingBlock(i);
+                    Value* taintVal = getRegOpTaintVal(phiV);
+                    taintPHI->addIncoming(taintVal,srcBB);
+                }
+
+               RegToTaintVal[&I] = taintPHI; 
+           }
+
+
+            void visitUnaryInstruction(UnaryInstruction &I) {
+
+                Value* opA = I.getOperand(0);
+                Value* opTaint = getRegOpTaintVal(opA);
+ 
+                BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
+                                                opTaint,
+                                                ConstantInt::get(TaintIntType,0,false),
+                                                "unaryT",
+                                                &I);
+
+                // The BinaryOperator instruction is now the taint value for 
+                // instruction I; add it to the map.
+                RegToTaintVal[&I] = orInst;
+           }
 
 
             void visitBinaryOperator(BinaryOperator &I) {
@@ -129,7 +161,7 @@ namespace {
                 BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
                         opATaint,
                         opBTaint,
-                        "bin_or",
+                        "binT",
                         &I);
 
                 // The BinaryOperator instruction is now the taint value for 
@@ -174,9 +206,30 @@ namespace {
             }
 
 
+            // For now, let's taint everything that gets return from a function.
+            // TODO: Don't taint if the function that is getting called is defined
+            // in our source code.
+            void visitCallInst(CallInst &I) {
+
+                // We can use this later on to decide which functions' return vals should
+                // be tainted.
+                Function* calledFunc = I.getCalledFunction(); 
+
+                // TODO: based on the calledFun, either taint or don't taint the 
+                // returned value.
+
+                BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
+                                            ConstantInt::get(TaintIntType,1,false),
+                                            ConstantInt::get(TaintIntType,1,false),
+                                            "callT",
+                                            &I);
+
+                RegToTaintVal[&I] = orInst;
+            }
+
             
             void visitInstruction(Instruction &I) {
-                //errs() << "Unknow instruction of type: " << I.getOpcodeName() << "\n";
+                //errs() << "=== Unknown instruction of type: " << I.getOpcodeName() << "\n";
             }
 
                 
@@ -228,7 +281,6 @@ namespace {
                     // TODO: this should be '0', '1' is just for initial
                     // testing.
                     regOpTaintVal = ConstantInt::get(TaintIntType,0,false); 
-
                 }
 
                 return regOpTaintVal;
@@ -250,18 +302,25 @@ namespace {
             // For each instruction in each basic block of this function,
             // insert taint checking instruction.           
             for(Module::iterator m = M.begin(); m != M.end(); m++) {
+                
                 Function* F = m;
  
-                // TODO: figure out how to only call createAbortBB on functions
-                // defined inside of the source code.
-                if(F->getName() != "main") continue; 
-                //errs() << "Handling function: " << F->getName() << "\n";
-                createAbortBB(M,*F);
+                // We only want to insert the abortBB into functions that are actually
+                // defined in the source code we are instrumenting. Since we are iterating
+                // over all function calls in the source, only add abortBB to a function
+                // once we have seen an instruction for that function.
+                bool foundInst = true;
+
 
                 std::vector<Instruction*> funcInstList;
 
                 for(Function::iterator b = F->begin(); b != F->end(); b++) {
                     
+                    if(foundInst) {
+                        foundInst = false;
+                        createAbortBB(M,*F);
+                    }
+
                     // We don't need to worry about tracking anything in the
                     // abortBB.                    
                     if(b->getName() == "abortBB") continue; 
@@ -296,14 +355,22 @@ namespace {
 
             // Create instruction to call exit.
             Constant* lookup = M.getOrInsertFunction("exit",
-                                                     IntegerType::get(F.getContext(),32),
+                                                     IntegerType::get(M.getContext(),32),
                                                      NULL);
             assert(lookup != NULL && "Could not find exit function!");
        
             Function* exitFunc = cast<Function>(lookup);
             Function::ArgumentListType* list = &(exitFunc->getArgumentList());
             std::vector<Value*> args;
-            //args.push_back(ConstantInt::get(Type::getInt1Ty(M.getContext()),-1));
+ 
+            /* TODO: seems like exit should take 1 parameter, but it wants none.
+             * Figure out what's going on and make sure we are calling it correctly.
+            Function::ArgumentListType* argList = &exitFunc->getArgumentList();
+            errs() << "Num params for exit = " << argList->size() << "\n";           
+            args.push_back(ConstantInt::get(IntegerType::get(M.getContext(),32),
+                           -1,
+                           true));
+            */
 
             // Insert a dummy branch to be the terminator of abortBB.
             BranchInst *br = BranchInst::Create(abortBB,abortBB); 

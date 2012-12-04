@@ -11,13 +11,13 @@ entry:
   %y = alloca i32, align 4
   %z = alloca i32, align 4
   %taint_store = alloca i1
-  store i1 false, i1* %taint_store
+  store i1 true, i1* %taint_store
   store i32 0, i32* %retval
   %taint_store1 = alloca i1
-  store i1 false, i1* %taint_store1
+  store i1 true, i1* %taint_store1
   store i32 6, i32* %x, align 4
   %taint_store2 = alloca i1
-  store i1 false, i1* %taint_store2
+  store i1 true, i1* %taint_store2
   store i32 5, i32* %y, align 4
   %taint_load = load i1* %taint_store1
   %mem_or = or i1 %taint_load, false
@@ -33,7 +33,7 @@ entry:
   %taint_load6 = load i1* %taint_store5
   %mem_or7 = or i1 %taint_load6, false
   %2 = load i32* %z, align 4
-  %bin_or8 = or i1 %mem_or7, false
+  %bin_or8 = or i1 %mem_or7, true
   %inc = add nsw i32 %2, 1
   store i1 %bin_or8, i1* %taint_store5
   store i32 %inc, i32* %z, align 4

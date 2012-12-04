@@ -9,7 +9,7 @@ main:                                   # @main
 	subq	$24, %rsp
 .Ltmp1:
 	.cfi_def_cfa_offset 32
-	movb	$1, 15(%rsp)
+	movb	$0, 15(%rsp)
 	movl	$0, 20(%rsp)
 	movb	$0, 14(%rsp)
 	movl	$6, 16(%rsp)
