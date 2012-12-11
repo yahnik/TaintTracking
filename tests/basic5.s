@@ -1,4 +1,4 @@
-	.file	"basic3.tt.bc"
+	.file	"basic5.tt.bc"
 	.text
 	.globl	doStuff
 	.align	16, 0x90
@@ -6,9 +6,12 @@
 doStuff:                                # @doStuff
 	.cfi_startproc
 # BB#0:                                 # %entry
+	movb	param_taint(%rip), %al
+	orb	%al, %al
+	andb	$1, %al
+	movb	%al, return_taint1(%rip)
 	leal	3(%rdi), %eax
 	imull	%edi, %eax
-	addl	%esi, %eax
 	ret
 .Ltmp0:
 	.size	doStuff, .Ltmp0-doStuff
@@ -46,45 +49,28 @@ main:                                   # @main
 	addl	%ecx, %eax
 	imull	$20, %eax, %eax
 	subl	%eax, %edi
-	movl	%edi, %eax
-	shrl	$31, %eax
-	addl	%edi, %eax
-	andl	$-2, %eax
-	movl	%edi, %ecx
-	subl	%eax, %ecx
-	je	.LBB1_2
-# BB#1:                                 # %if.then
-	movl	$5, %ebx
-	xorb	%bpl, %bpl
-	movl	$.L.str, %edi
-	movl	$5, %esi
-	xorb	%al, %al
-	callq	printf
-	jmp	.LBB1_3
-.LBB1_2:                                # %if.end
+	movb	$1, param_taint(%rip)
                                         # kill: EDI<def> EDI<kill> RDI<kill>
-	movl	$5, %esi
 	callq	doStuff
 	movl	%eax, %ebx
-	movl	$.L.str1, %edi
+	movb	return_taint1(%rip), %bpl
+	movl	$.L.str, %edi
 	movl	%ebx, %esi
 	xorb	%al, %al
 	callq	printf
-	movb	$1, %bpl
-.LBB1_3:                                # %return
-	cmpb	$1, %bpl
-	je	.LBB1_5
-# BB#4:                                 # %cont_BB
+	testb	%bpl, %bpl
+	jne	.LBB1_2
+# BB#1:                                 # %cont_BB
 	movl	%ebx, %eax
 	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret
 	.align	16, 0x90
-.LBB1_5:                                # %abortBB
+.LBB1_2:                                # %abortBB
                                         # =>This Inner Loop Header: Depth=1
 	callq	exit
-	jmp	.LBB1_5
+	jmp	.LBB1_2
 .Ltmp9:
 	.size	main, .Ltmp9-main
 	.cfi_endproc
@@ -92,13 +78,27 @@ main:                                   # @main
 	.type	.L.str,@object          # @.str
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .L.str:
-	.asciz	 "Y = %d\n"
+	.asciz	 "W = %d\n"
 	.size	.L.str, 8
 
-	.type	.L.str1,@object         # @.str1
-.L.str1:
-	.asciz	 "W = %d\n"
-	.size	.L.str1, 8
+	.type	return_taint,@object    # @return_taint
+	.bss
+	.globl	return_taint
+return_taint:
+	.byte	0                       # 0x0
+	.size	return_taint, 1
+
+	.type	return_taint1,@object   # @return_taint1
+	.globl	return_taint1
+return_taint1:
+	.byte	0                       # 0x0
+	.size	return_taint1, 1
+
+	.type	param_taint,@object     # @param_taint
+	.globl	param_taint
+param_taint:
+	.byte	0                       # 0x0
+	.size	param_taint, 1
 
 
 	.section	".note.GNU-stack","",@progbits

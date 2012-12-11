@@ -2,8 +2,12 @@
 
 - Add instruction to print warning message in abortBB.
 
-- Track across PHI nodes
-
-- Track across function calls
+- Track across function calls (how to globally store list of addresses that
+  will be used to store taint values?)
 
 - How to define sinks and sources?
+
+- Handle values returned by reference/pointer
+
+- Extra pass across all functions to check for external function call
+    If no, don't bother instrumenting that function.

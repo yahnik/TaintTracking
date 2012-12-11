@@ -84,5 +84,12 @@ main:                                   # @main
 	.asciz	 "Expected return => %d\n"
 	.size	.L.str1, 23
 
+	.type	return_taint,@object    # @return_taint
+	.bss
+	.globl	return_taint
+return_taint:
+	.byte	0                       # 0x0
+	.size	return_taint, 1
+
 
 	.section	".note.GNU-stack","",@progbits

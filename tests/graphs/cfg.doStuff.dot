@@ -1,10 +1,7 @@
 digraph "CFG for 'doStuff' function" {
 	label="CFG for 'doStuff' function";
 
-	Node0x24c7050 [shape=record,label="{entry:\l  %unaryT = or i1 false, false\l  %a.addr = alloca i32, align 4\l  %unaryT1 = or i1 false, false\l  %b.addr = alloca i32, align 4\l  %unaryT2 = or i1 false, false\l  %c = alloca i32, align 4\l  %storeT = alloca i1\l  store i1 false, i1* %storeT\l  store i32 %a, i32* %a.addr, align 4\l  %storeT3 = alloca i1\l  store i1 false, i1* %storeT3\l  store i32 %b, i32* %b.addr, align 4\l  %taint_load = load i1* %storeT\l  %loadT = or i1 %taint_load, false\l  %0 = load i32* %a.addr, align 4\l  %binT = or i1 %loadT, false\l  %add = add nsw i32 %0, 3\l  %taint_load4 = load i1* %storeT\l  %loadT5 = or i1 %taint_load4, false\l  %1 = load i32* %a.addr, align 4\l  %binT6 = or i1 %binT, %loadT5\l  %mul = mul nsw i32 %add, %1\l  %storeT7 = alloca i1\l  store i1 %binT6, i1* %storeT7\l  store i32 %mul, i32* %c, align 4\l  %taint_load8 = load i1* %storeT3\l  %loadT9 = or i1 %taint_load8, false\l  %2 = load i32* %b.addr, align 4\l  %taint_load10 = load i1* %storeT7\l  %loadT11 = or i1 %taint_load10, false\l  %3 = load i32* %c, align 4\l  %binT12 = or i1 %loadT11, %loadT9\l  %add1 = add nsw i32 %3, %2\l  store i1 %binT12, i1* %storeT7\l  store i32 %add1, i32* %c, align 4\l  %taint_load13 = load i1* %storeT7\l  %loadT14 = or i1 %taint_load13, false\l  %4 = load i32* %c, align 4\l  %taint_check = icmp eq i1 %loadT14, true\l  br i1 %taint_check, label %abortBB, label %cont_BB\l|{<s0>T|<s1>F}}"];
-	Node0x24c7050:s0 -> Node0x24c7110;
-	Node0x24c7050:s1 -> Node0x24c70b0;
-	Node0x24c70b0 [shape=record,label="{cont_BB:                                          \l  ret i32 %4\l}"];
-	Node0x24c7110 [shape=record,label="{abortBB:                                          \l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
-	Node0x24c7110 -> Node0x24c7110;
+	Node0x2480d20 [shape=record,label="{entry:\l  %param_taint_load = load i1* @param_taint\l  %binT = or i1 %param_taint_load, false\l  %add = add nsw i32 %a, 3\l  %binT1 = or i1 %binT, %param_taint_load\l  %mul = mul nsw i32 %add, %a\l  store i1 %binT1, i1* @return_taint1\l  ret i32 %mul\l}"];
+	Node0x2480d80 [shape=record,label="{abortBB:                                          \l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
+	Node0x2480d80 -> Node0x2480d80;
 }

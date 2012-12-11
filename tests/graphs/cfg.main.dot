@@ -1,17 +1,10 @@
 digraph "CFG for 'main' function" {
 	label="CFG for 'main' function";
 
-	Node0x157a170 [shape=record,label="{entry:\l  %callT = or i1 true, true\l  %call = call i64 @time(i64* null) nounwind\l  %unaryT = or i1 %callT, false\l  %conv = trunc i64 %call to i32\l  %callT1 = or i1 true, true\l  call void @srand(i32 %conv) nounwind\l  %callT2 = or i1 true, true\l  %call1 = call i32 @rand() nounwind\l  %binT = or i1 %callT2, false\l  %rem = srem i32 %call1, 2\l  %tobool = icmp ne i32 %rem, 0\l  br i1 %tobool, label %if.then, label %if.else\l|{<s0>T|<s1>F}}"];
-	Node0x157a170:s0 -> Node0x157a1d0;
-	Node0x157a170:s1 -> Node0x1578f00;
-	Node0x157a1d0 [shape=record,label="{if.then:                                          \l  %loadT = or i1 false, false\l  %0 = load %struct._IO_FILE** @stdout, align 8\l  %callT3 = or i1 true, true\l  %call2 = call i32 (%struct._IO_FILE*, i8*, ...)* @fprintf(%struct._IO_FILE* %0, i8* getelementptr inbounds ([19 x i8]* @.str, i32 0, i32 0))\l  %callT4 = or i1 true, true\l  %call3 = call i32 @rand() nounwind\l  %binT5 = or i1 %callT4, false\l  %rem4 = srem i32 %call3, 20\l  br label %if.end\l}"];
-	Node0x157a1d0 -> Node0x1578f60;
-	Node0x1578f00 [shape=record,label="{if.else:                                          \l  br label %if.end\l}"];
-	Node0x1578f00 -> Node0x1578f60;
-	Node0x1578f60 [shape=record,label="{if.end:                                           \l  %taintPHI = phi i1 [ %binT5, %if.then ], [ false, %if.else ]\l  %x.0 = phi i32 [ %rem4, %if.then ], [ 4, %if.else ]\l  %loadT6 = or i1 false, false\l  %1 = load %struct._IO_FILE** @stdout, align 8\l  %binT7 = or i1 %taintPHI, false\l  %mul = mul nsw i32 %x.0, 8\l  %callT8 = or i1 true, true\l  %call5 = call i32 (%struct._IO_FILE*, i8*, ...)* @fprintf(%struct._IO_FILE* %1, i8* getelementptr inbounds ([23 x i8]* @.str1, i32 0, i32 0), i32 %mul)\l  %binT9 = or i1 %taintPHI, false\l  %mul6 = mul nsw i32 %x.0, 8\l  %taint_check = icmp eq i1 %binT9, true\l  br i1 %taint_check, label %abortBB, label %cont_BB\l|{<s0>T|<s1>F}}"];
-	Node0x1578f60:s0 -> Node0x1579020;
-	Node0x1578f60:s1 -> Node0x1578fc0;
-	Node0x1578fc0 [shape=record,label="{cont_BB:                                          \l  ret i32 %mul6\l}"];
-	Node0x1579020 [shape=record,label="{abortBB:                                          \l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
-	Node0x1579020 -> Node0x1579020;
+	Node0x24809d0 [shape=record,label="{entry:\l  %call = call i64 @time(i64* null) nounwind\l  %callT = or i1 true, true\l  %unaryT = or i1 %callT, false\l  %conv = trunc i64 %call to i32\l  call void @srand(i32 %conv) nounwind\l  %callT1 = or i1 true, true\l  %call1 = call i32 @rand() nounwind\l  %callT2 = or i1 true, true\l  %binT = or i1 %callT2, false\l  %rem = srem i32 %call1, 20\l  store i1 %binT, i1* @param_taint\l  %call2 = call i32 @doStuff(i32 %rem)\l  %retT_load = load i1* @return_taint1\l  %call3 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([8 x i8]* @.str, i32 0, i32 0), i32 %call2)\l  %callT3 = or i1 true, true\l  %taint_check = icmp eq i1 %retT_load, true\l  br i1 %taint_check, label %abortBB, label %cont_BB\l|{<s0>T|<s1>F}}"];
+	Node0x24809d0:s0 -> Node0x2484ab0;
+	Node0x24809d0:s1 -> Node0x24836f0;
+	Node0x24836f0 [shape=record,label="{cont_BB:                                          \l  ret i32 %call2\l}"];
+	Node0x2484ab0 [shape=record,label="{abortBB:                                          \l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
+	Node0x2484ab0 -> Node0x2484ab0;
 }
