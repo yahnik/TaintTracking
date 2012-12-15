@@ -14,11 +14,11 @@ int main() {
 
     srand(time(NULL));
     int x;
-    x = rand()%20;
-    //x = 5;
+    //x = rand()%20;
+    x = 5;
 
     int w = doStuff(x);
 
-    printf("W = %d\n", w);
+    printf("Expected program return value = %d\n", w);
     return w;
 }

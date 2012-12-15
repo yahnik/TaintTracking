@@ -40,17 +40,8 @@ main:                                   # @main
 	callq	time
 	movl	%eax, %edi
 	callq	srand
-	callq	rand
-	movslq	%eax, %rdi
-	imulq	$1717986919, %rdi, %rax # imm = 0x66666667
-	movq	%rax, %rcx
-	shrq	$63, %rcx
-	sarq	$35, %rax
-	addl	%ecx, %eax
-	imull	$20, %eax, %eax
-	subl	%eax, %edi
-	movb	$1, param_taint(%rip)
-                                        # kill: EDI<def> EDI<kill> RDI<kill>
+	movb	$0, param_taint(%rip)
+	movl	$5, %edi
 	callq	doStuff
 	movl	%eax, %ebx
 	movb	return_taint1(%rip), %bpl
@@ -69,6 +60,9 @@ main:                                   # @main
 	.align	16, 0x90
 .LBB1_2:                                # %abortBB
                                         # =>This Inner Loop Header: Depth=1
+	movl	$.L.str3, %edi
+	xorb	%al, %al
+	callq	printf
 	callq	exit
 	jmp	.LBB1_2
 .Ltmp9:
@@ -78,8 +72,8 @@ main:                                   # @main
 	.type	.L.str,@object          # @.str
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .L.str:
-	.asciz	 "W = %d\n"
-	.size	.L.str, 8
+	.asciz	 "Expected program return value = %d\n"
+	.size	.L.str, 36
 
 	.type	return_taint,@object    # @return_taint
 	.bss
@@ -99,6 +93,17 @@ return_taint1:
 param_taint:
 	.byte	0                       # 0x0
 	.size	param_taint, 1
+
+	.type	.L.str2,@object         # @.str2
+	.section	.rodata,"a",@progbits
+.L.str2:
+	.asciz	 "Warning: tainted data in use!\n"
+	.size	.L.str2, 31
+
+	.type	.L.str3,@object         # @.str3
+.L.str3:
+	.asciz	 "Warning: tainted data in use!\n"
+	.size	.L.str3, 31
 
 
 	.section	".note.GNU-stack","",@progbits

@@ -68,7 +68,7 @@ namespace {
     // A list of the functions actually definde in the source code we are instrumenting.
     std::set<Function*> DefinedFunctions;
 
-    
+
 
     struct TaintTracking : public ModulePass {
 
@@ -85,12 +85,12 @@ namespace {
 
                 // Load the taint value for the load's address operand.
                 Value* opTaintVal = getMemOpTaintVal(I.getPointerOperand(),I);
-                
+
                 BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
-                                            opTaintVal,
-                                            ConstantInt::get(TaintIntType,0,false),
-                                            "loadT",
-                                            &I);
+                        opTaintVal,
+                        ConstantInt::get(TaintIntType,0,false),
+                        "loadT",
+                        &I);
 
                 RegToTaintVal[&I] = orInst;
             }
@@ -102,34 +102,34 @@ namespace {
                 // taint value so we can later load it.
                 Value* taintStoreAddr = 
                     getTaintAddrForMemAddr(I.getPointerOperand());
-                
+
                 if(taintStoreAddr == NULL) {
                     // Don't have a taint value in memory for this address.
                     // Need to allocate memory to store it now. 
                     taintStoreAddr = new AllocaInst(TaintIntType, 
-                                                    "storeT",
-                                                    &I);
+                            "storeT",
+                            &I);
                     AddrToTaintAddr[I.getPointerOperand()] = taintStoreAddr;
                 }
-             
+
                 Value* regTaintVal = getRegOpTaintVal(I.getValueOperand());
 
                 StoreInst *taintStore = new StoreInst(regTaintVal,
-                                                      taintStoreAddr,
-                                                      false,
-                                                      &I);
- 
+                        taintStoreAddr,
+                        false,
+                        &I);
+
             }
 
 
             void visitPHINode(PHINode &I) {
-           
+
                 int numPhiVals = I.getNumIncomingValues();
                 PHINode* taintPHI = PHINode::Create(TaintIntType,
-                                                    I.getNumIncomingValues(),
-                                                    "taintPHI",
-                                                    &I);
-                
+                        I.getNumIncomingValues(),
+                        "taintPHI",
+                        &I);
+
                 for(int i = 0; i < numPhiVals; i++) {
                     Value* phiV = I.getIncomingValue(i);
                     BasicBlock* srcBB = I.getIncomingBlock(i);
@@ -137,25 +137,25 @@ namespace {
                     taintPHI->addIncoming(taintVal,srcBB);
                 }
 
-               RegToTaintVal[&I] = taintPHI; 
-           }
+                RegToTaintVal[&I] = taintPHI; 
+            }
 
 
             void visitUnaryInstruction(UnaryInstruction &I) {
 
                 Value* opA = I.getOperand(0);
                 Value* opTaint = getRegOpTaintVal(opA);
- 
+
                 BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
-                                                opTaint,
-                                                ConstantInt::get(TaintIntType,0,false),
-                                                "unaryT",
-                                                &I);
+                        opTaint,
+                        ConstantInt::get(TaintIntType,0,false),
+                        "unaryT",
+                        &I);
 
                 // The BinaryOperator instruction is now the taint value for 
                 // instruction I; add it to the map.
                 RegToTaintVal[&I] = orInst;
-           }
+            }
 
 
             void visitBinaryOperator(BinaryOperator &I) {
@@ -196,41 +196,41 @@ namespace {
                     handleReturnFromMain(I);
                     return;
                 }
-                    
+
                 // Store the return value's taint value at the correct GlobalVar 
                 // address for this instruction's function.
-                
+
                 Value* retVal = I.getReturnValue();
                 Value* retTaint = getRegOpTaintVal(retVal);
-                
+
                 FunctionToGlobalVarIt = FunctionToReturnTaintAddr.find(f);
-            
+
                 assert(FunctionToGlobalVarIt != FunctionToReturnTaintAddr.end() &&
                         "Function doesn't have AllocaInst for it's taint return!"); 
-                
+
                 GlobalVariable* taintAddr = FunctionToGlobalVarIt->second;
-                
+
                 StoreInst *taintStore = new StoreInst(retTaint,
-                                                      taintAddr,
-                                                      false,
-                                                      &I);
-                
+                        taintAddr,
+                        false,
+                        &I);
+
 
             }
 
 
             void handleReturnFromMain(ReturnInst &I) {
-                
+
                 BasicBlock* orig = I.getParent();
 
                 Value* retVal = I.getReturnValue();
                 Value* retTaint = getRegOpTaintVal(retVal);
 
                 ICmpInst *cmpInst = new ICmpInst(&I, 
-                                                 ICmpInst::ICMP_EQ, 
-                                                 retTaint, 
-                                                 ConstantInt::get(TaintIntType,1,false),
-                                                 "taint_check");
+                        ICmpInst::ICMP_EQ, 
+                        retTaint, 
+                        ConstantInt::get(TaintIntType,1,false),
+                        "taint_check");
 
                 // Split current basic block.
                 //  Branch to abortBB is taint value = 1
@@ -239,20 +239,20 @@ namespace {
                 continueBB->setName("cont_BB");
 
                 BranchInst *abortBr = BranchInst::Create(abortBB,
-                                                         continueBB,
-                                                         cmpInst,
-                                                         orig->getTerminator());                
+                        continueBB,
+                        cmpInst,
+                        orig->getTerminator());                
                 orig->getTerminator()->eraseFromParent();
-                    
+
                 assert(orig->getTerminator() != NULL && 
                         "OrigBB has no terminator!");
-                
+
                 assert(continueBB->getTerminator() != NULL && 
                         "ContinueBB has no terminator!");
             }
 
-            
-            
+
+
             void visitCallInst(CallInst &I) {
 
                 // Add instructions to store the taint values of the function parameters.
@@ -265,7 +265,7 @@ namespace {
                 insertReturnTaintLoad(I);
             }
 
-            
+
             void insertReturnTaintLoad(CallInst &I) {
 
                 Function* calledFunc = I.getCalledFunction();
@@ -280,8 +280,8 @@ namespace {
                 if(DefinedFunctions.find(calledFunc) != DefinedFunctions.end()) {
                     FunctionToGlobalVarIt = FunctionToReturnTaintAddr.find(calledFunc);
                     assert(FunctionToGlobalVarIt != FunctionToReturnTaintAddr.end() &&
-                        "Function doesn't have AllocaInst for it's taint return!"); 
-                
+                            "Function doesn't have AllocaInst for it's taint return!"); 
+
                     GlobalVariable* taintAddr = FunctionToGlobalVarIt->second;
                     taintVal = new LoadInst(taintAddr,"retT_load",it);
                 }
@@ -289,22 +289,22 @@ namespace {
                     // Taint values coming back from external function calls.
                     // taintVal = ConstantInt::get(TaintIntType,1,false);               
                     taintVal  = BinaryOperator::Create(Instruction::Or,
-                                            ConstantInt::get(TaintIntType,1,false),
-                                            ConstantInt::get(TaintIntType,1,false),
-                                            "callT",
-                                            it);
+                            ConstantInt::get(TaintIntType,1,false),
+                            ConstantInt::get(TaintIntType,1,false),
+                            "callT",
+                            it);
                 }
-              
+
                 /* 
-                BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
-                                            taintVal,
-                                            ConstantInt::get(TaintIntType,0,false),
-                                            "callT",
-                                            it);
-                */
+                   BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
+                   taintVal,
+                   ConstantInt::get(TaintIntType,0,false),
+                   "callT",
+                   it);
+                   */
                 RegToTaintVal[&I] = taintVal;
             }
-    
+
 
 
             void insertParamTaintStore(CallInst &I) {
@@ -312,7 +312,6 @@ namespace {
                 Function* calledFunc = I.getCalledFunction();
                 FunctionToGlobalVarVecIt = FunctionToParamTaintAddr.find(calledFunc);
 
-                errs() << "Function = " << calledFunc->getName() << "\n";
                 assert(FunctionToGlobalVarVecIt != FunctionToParamTaintAddr.end() &&
                         "CallInst to function with no param taint memory allocated!");
 
@@ -327,9 +326,9 @@ namespace {
 
                     Value* taint = getRegOpTaintVal(arg);
                     StoreInst* paramTaintStore = new StoreInst(taint,
-                                                               tAddr,
-                                                               false,
-                                                               &I); 
+                            tAddr,
+                            false,
+                            &I); 
                 }
             }
 
@@ -338,13 +337,13 @@ namespace {
                 //errs() << "=== Unknown instruction of type: " << I.getOpcodeName() << "\n";
             }
 
-                
+
             // If we have seen this memory address before, its taint value
             // will be a load from the taint address for this instruction.
             // Otherwise, its taint is simple '0'.
             Value* getMemOpTaintVal(Value* addrOp, Instruction &I) {
 
-               Value* taintValAddr = getTaintAddrForMemAddr(addrOp);
+                Value* taintValAddr = getTaintAddrForMemAddr(addrOp);
                 if(taintValAddr == NULL) 
                     return ConstantInt::get(TaintIntType,0,false); 
 
@@ -399,7 +398,7 @@ namespace {
         virtual bool runOnModule(Module &M) {
 
             taintPass = this;
-            
+
             TaintIntType = IntegerType::get(M.getContext(),1);
 
             findDefinedFunctions(M);
@@ -409,9 +408,9 @@ namespace {
             // For each instruction in each basic block of this function,
             // insert taint checking instruction.           
             for(Module::iterator m = M.begin(); m != M.end(); m++) {
-                
+
                 Function* F = m;
- 
+
                 // We only want to insert the abortBB into functions that are actually
                 // defined in the source code we are instrumenting. Since we are iterating
                 // over all function calls in the source, only add abortBB to a function
@@ -422,7 +421,7 @@ namespace {
                 std::vector<Instruction*> funcInstList;
 
                 for(Function::iterator b = F->begin(); b != F->end(); b++) {
-                    
+
                     if(!foundInst) {
                         foundInst = true;
 
@@ -438,7 +437,7 @@ namespace {
                         funcInstList.push_back(i);
                     }
                 }    
-               
+
                 if(foundInst)
                     insertParamTaintLoads(F);
 
@@ -449,7 +448,7 @@ namespace {
                     TaintVis.visit(*inst);
                 }
             }
-            
+
             return true;
         }
 
@@ -464,18 +463,14 @@ namespace {
             std::vector<GlobalVariable*> *paramTaintAddrs = FunctionToGlobalVarVecIt->second;
             std::vector<GlobalVariable*>::iterator addrIt = paramTaintAddrs->begin();               
 
-            errs() << "=== Function: " << F->getName() << "\n";
-            
             for( ; argList != (F->getArgumentList()).end(); argList++) {
-        
+
                 Value* arg = argList;
                 GlobalVariable* loadAddr = *addrIt++;
-               
-                errs() << "\tARG: " << *arg << "\n";
 
                 LoadInst* paramTaintLoad = new LoadInst(loadAddr,
-                                                        "param_taint_load",
-                                                        &F->getEntryBlock().front());
+                        "param_taint_load",
+                        &F->getEntryBlock().front());
                 RegToTaintVal[arg] = paramTaintLoad;
             } 
 
@@ -489,22 +484,22 @@ namespace {
 
                 Function* f = *it;
                 Function::ArgumentListType* argList = &f->getArgumentList();
-                
+
                 // For each argument for Function f, we need to allocate a bit on the
                 // stack to store the argument's taint value.
                 std::vector<GlobalVariable*>* paramTaintAddrs = 
-                                            new std::vector<GlobalVariable*>();
+                    new std::vector<GlobalVariable*>();
                 for(unsigned int i = 0; i < argList->size(); i++) {
 
                     GlobalVariable* pTaint = new GlobalVariable(M,
-                                                    TaintIntType,
-                                                    false,
-                                                    GlobalValue::ExternalLinkage,
-                                                    0,
-                                                    "param_taint");
- 
+                            TaintIntType,
+                            false,
+                            GlobalValue::ExternalLinkage,
+                            0,
+                            "param_taint");
+
                     ConstantInt* untaintedVal = ConstantInt::get(M.getContext(),
-                                                             APInt(1,StringRef("0"),10));
+                            APInt(1,StringRef("0"),10));
 
                     pTaint->setInitializer(untaintedVal);
                     paramTaintAddrs->push_back(pTaint);
@@ -520,18 +515,18 @@ namespace {
 
             for(std::set<Function*>::iterator it = DefinedFunctions.begin();
                     it != DefinedFunctions.end(); it++) {
-            
+
                 Function* f = *it;
 
                 GlobalVariable* funcTaintStore = new GlobalVariable(M,
-                                                    TaintIntType,
-                                                    false,
-                                                    GlobalValue::ExternalLinkage,
-                                                    0,
-                                                    "return_taint");
+                        TaintIntType,
+                        false,
+                        GlobalValue::ExternalLinkage,
+                        0,
+                        "return_taint");
 
                 ConstantInt* untaintedVal = ConstantInt::get(M.getContext(),
-                                                             APInt(1,StringRef("0"),10));
+                        APInt(1,StringRef("0"),10));
 
                 funcTaintStore->setInitializer(untaintedVal);
 
@@ -560,36 +555,87 @@ namespace {
             // This will be the block that is branched to if a taint value
             // is being used for some type of output.
             abortBB = BasicBlock::Create(F.getContext(),
-                                         "abortBB",
-                                         &F,
-                                         NULL);
+                    "abortBB",
+                    &F,
+                    NULL);
 
-            // Create instruction to call exit.
-            Constant* lookup = M.getOrInsertFunction("exit",
-                                                     IntegerType::get(M.getContext(),32),
-                                                     NULL);
-            assert(lookup != NULL && "Could not find exit function!");
-       
-            Function* exitFunc = cast<Function>(lookup);
-            Function::ArgumentListType* list = &(exitFunc->getArgumentList());
-            std::vector<Value*> args;
- 
+
             /* TODO: seems like exit should take 1 parameter, but it wants none.
              * Figure out what's going on and make sure we are calling it correctly.
-            Function::ArgumentListType* argList = &exitFunc->getArgumentList();
-            errs() << "Num params for exit = " << argList->size() << "\n";           
-            args.push_back(ConstantInt::get(IntegerType::get(M.getContext(),32),
-                           -1,
-                           true));
-            */
+             Function::ArgumentListType* argList = &exitFunc->getArgumentList();
+             errs() << "Num params for exit = " << argList->size() << "\n";           
+             args.push_back(ConstantInt::get(IntegerType::get(M.getContext(),32),
+             -1,
+             true));
+             */
 
             // Insert a dummy branch to be the terminator of abortBB.
             BranchInst *br = BranchInst::Create(abortBB,abortBB); 
 
+
+            // Call printf
+            
+            std::vector<Type*> argTypes;
+            argTypes.push_back(PointerType::get(IntegerType::get(M.getContext(),8),0));
+            FunctionType* funcTy = FunctionType::get(
+                                        IntegerType::get(M.getContext(), 32),
+                                        argTypes,
+                                        true);
+
+            Function* funcPrintf = M.getFunction("printf");
+            if (!funcPrintf) {
+                funcPrintf = Function::Create(funcTy,
+                                              GlobalValue::ExternalLinkage,
+                                              "printf", 
+                                              &M); 
+                funcPrintf->setCallingConv(CallingConv::C);
+            }
+            
+            AttrListPtr funcPrintf_PAL;
+            funcPrintf->setAttributes(funcPrintf_PAL);
+
+            Constant* warnMsg = ConstantDataArray::getString(M.getContext(), 
+                                            "Warning: tainted data in use!\x0A", true);
+
+            ArrayType* ArrayTy_0 = ArrayType::get(IntegerType::get(M.getContext(), 8), 31);
+            GlobalVariable* gvarArrayStr = new GlobalVariable(M, 
+                                                              ArrayTy_0,
+                                                              true,
+                                                              GlobalValue::PrivateLinkage,
+                                                              0,
+                                                              ".str");
+            gvarArrayStr->setAlignment(1);
+            gvarArrayStr->setInitializer(warnMsg);
+
+            std::vector<Constant*> indices;
+            indices.push_back(ConstantInt::get(M.getContext(), APInt(32, StringRef("0"), 10)));
+            indices.push_back(ConstantInt::get(M.getContext(), APInt(32, StringRef("0"), 10)));
+
+            Constant* warnMsgPtr = ConstantExpr::getGetElementPtr(gvarArrayStr,indices);
+            CallInst* printfFunc = CallInst::Create(funcPrintf,
+                                                    warnMsgPtr,
+                                                    "warn_printf",
+                                                    abortBB->getTerminator());
+            printfFunc->setCallingConv(CallingConv::C);
+            printfFunc->setTailCall(false);
+            AttrListPtr printfPAL;
+            printfFunc->setAttributes(printfPAL);
+
+
+            // Call exit
+            Constant* lookup = M.getOrInsertFunction("exit",
+                    IntegerType::get(M.getContext(),32),
+                    NULL);
+            assert(lookup != NULL && "Could not find exit function!");
+
+            Function* exitFunc = cast<Function>(lookup);
+            Function::ArgumentListType* list = &(exitFunc->getArgumentList());
+            std::vector<Value*> args;
+
             CallInst *callExit = CallInst::Create(exitFunc,
-                                                  args,
-                                                  "exit",
-                                                  abortBB->getTerminator());
+                    args,
+                    "exit",
+                    abortBB->getTerminator());
 
             assert(abortBB->getTerminator() != NULL && 
                     "AbortBB has no terminator!"); 
@@ -599,7 +645,7 @@ namespace {
         /* TODO: is this necessary?
         // We don't modify the program, so we preserve all analyses
         virtual void getAnalysisUsage(AnalysisUsage &AU) const {
-            AU.setPreservesAll();
+        AU.setPreservesAll();
         }
         */
     };
