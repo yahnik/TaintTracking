@@ -1,7 +1,7 @@
 digraph "CFG for 'doStuff' function" {
 	label="CFG for 'doStuff' function";
 
-	Node0x180bd20 [shape=record,label="{entry:\l  %param_taint_load = load i1* @param_taint\l  %binT = or i1 %param_taint_load, false\l  %add = add nsw i32 %a, 3\l  %binT1 = or i1 %binT, %param_taint_load\l  %mul = mul nsw i32 %add, %a\l  store i1 %binT1, i1* @return_taint1\l  ret i32 %mul\l}"];
-	Node0x180bd80 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str2, i32 0, i32 0))\l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
-	Node0x180bd80 -> Node0x180bd80;
+	Node0x256d200 [shape=record,label="{entry:\l  %param_taint_load = load i1* @param_taint\l  %binT = or i1 %param_taint_load, false\l  %add = add nsw i32 %a, 3\l  %binT1 = or i1 %binT, %param_taint_load\l  %mul = mul nsw i32 %add, %a\l  store i1 %binT1, i1* @return_taint1\l  ret i32 %mul\l}"];
+	Node0x2569d20 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str2, i32 0, i32 0))\l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
+	Node0x2569d20 -> Node0x2569d20;
 }

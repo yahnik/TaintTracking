@@ -6,43 +6,32 @@
 main:                                   # @main
 	.cfi_startproc
 # BB#0:                                 # %entry
-	subq	$24, %rsp
-.Ltmp1:
-	.cfi_def_cfa_offset 32
-	movb	$1, 7(%rsp)
-	movl	$0, 20(%rsp)
-	movb	$1, 6(%rsp)
-	movl	$6, 16(%rsp)
-	movb	$1, 5(%rsp)
-	movl	$5, 12(%rsp)
-	movb	5(%rsp), %cl
-	movb	6(%rsp), %al
-	orb	%cl, %al
-	andb	$1, %al
-	movl	16(%rsp), %ecx
-	movb	%al, 4(%rsp)
-	leal	(%rcx,%rcx,4), %eax
-	movl	%eax, 8(%rsp)
-	movb	$1, 4(%rsp)
-	leal	1(%rcx,%rcx,4), %esi
-	movl	%esi, 8(%rsp)
+	pushq	%rbx
+.Ltmp2:
+	.cfi_def_cfa_offset 16
+.Ltmp3:
+	.cfi_offset %rbx, -16
+	xorb	%bl, %bl
 	movl	$.L.str, %edi
+	movl	$31, %esi
 	xorb	%al, %al
 	callq	printf
-	movb	4(%rsp), %al
-	testb	%al, %al
+	testb	%bl, %bl
 	jne	.LBB0_2
 # BB#1:                                 # %cont_BB
-	movl	8(%rsp), %eax
-	addq	$24, %rsp
+	movl	$31, %eax
+	popq	%rbx
 	ret
 	.align	16, 0x90
 .LBB0_2:                                # %abortBB
                                         # =>This Inner Loop Header: Depth=1
+	movl	$.L.str1, %edi
+	xorb	%al, %al
+	callq	printf
 	callq	exit
 	jmp	.LBB0_2
-.Ltmp2:
-	.size	main, .Ltmp2-main
+.Ltmp4:
+	.size	main, .Ltmp4-main
 	.cfi_endproc
 
 	.type	.L.str,@object          # @.str
@@ -50,6 +39,19 @@ main:                                   # @main
 .L.str:
 	.asciz	 "Z = %i\n"
 	.size	.L.str, 8
+
+	.type	return_taint,@object    # @return_taint
+	.bss
+	.globl	return_taint
+return_taint:
+	.byte	0                       # 0x0
+	.size	return_taint, 1
+
+	.type	.L.str1,@object         # @.str1
+	.section	.rodata,"a",@progbits
+.L.str1:
+	.asciz	 "Warning: tainted data in use!\n"
+	.size	.L.str1, 31
 
 
 	.section	".note.GNU-stack","",@progbits

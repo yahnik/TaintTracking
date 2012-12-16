@@ -9,7 +9,7 @@ testname=$1
 echo "Test name = $testname" 
 echo ""
 
-clang -emit-llvm -o $testname.bc -c $testname.c || 
+clang++ -emit-llvm -o $testname.bc -c $testname.cpp || 
     { echo "Failed to emit llvm bytecode."; exit 1; }
 
 echo "======================================================="
@@ -35,7 +35,7 @@ g++ -o $testname.tt.exe $testname.s || { echo "Failed to build executable."; exi
 echo "======================================================="
 echo "Executing program..."
 echo ""
-execStatement="./$testname.tt.exe $2"
+execStatement="./$testname.tt.exe"
 `expr "$execStatement"`
 echo "Program Return Value = $?"
 echo "======================================================="

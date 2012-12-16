@@ -1,13 +1,9 @@
-- Make sure we are calling exit() correctly.
-
-- Add instruction to print warning message in abortBB.
-
-- Track across function calls (how to globally store list of addresses that
-  will be used to store taint values?)
-
 - How to define sinks and sources?
+    -sinks (branches or printf)
+        -list of "protected" functions
+    -sources (fscanf, argv) 
 
-- Handle values returned by reference/pointer
-
-- Extra pass across all functions to check for external function call
-    If no, don't bother instrumenting that function.
+- Optimizations
+    - Extra pass across all functions to check for external function call
+        If no, don't bother instrumenting that function.
+    - don't add instruction to taint check F or F

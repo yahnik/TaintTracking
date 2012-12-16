@@ -28,16 +28,13 @@ abortBB:                                          ; preds = %abortBB
 define i32 @main() nounwind uwtable {
 entry:
   %call = call i64 @time(i64* null) nounwind
-  %callT = or i1 true, true
-  %unaryT = or i1 %callT, false
+  %unaryT = or i1 false, false
   %conv = trunc i64 %call to i32
   call void @srand(i32 %conv) nounwind
-  %callT1 = or i1 true, true
   store i1 false, i1* @param_taint
   %call1 = call i32 @doStuff(i32 5)
   %retT_load = load i1* @return_taint1
   %call2 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([36 x i8]* @.str, i32 0, i32 0), i32 %call1)
-  %callT2 = or i1 true, true
   %taint_check = icmp eq i1 %retT_load, true
   br i1 %taint_check, label %abortBB, label %cont_BB
 

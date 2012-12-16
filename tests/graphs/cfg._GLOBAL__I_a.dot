@@ -1,0 +1,7 @@
+digraph "CFG for '_GLOBAL__I_a' function" {
+	label="CFG for '_GLOBAL__I_a' function";
+
+	Node0x1d5d8c0 [shape=record,label="{entry:\l  call void @__cxx_global_var_init()\l  %retT_load = load i1* @return_taint1\l  store i1 false, i1* @return_taint2\l  ret void\l}"];
+	Node0x1d5d920 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str4, i32 0, i32 0))\l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
+	Node0x1d5d920 -> Node0x1d5d920;
+}

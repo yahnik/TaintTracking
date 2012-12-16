@@ -56,6 +56,9 @@ namespace {
     std::map<Function*,std::vector<GlobalVariable*>* > FunctionToParamTaintAddr;
     std::map<Function*,std::vector<GlobalVariable*>* >::iterator FunctionToGlobalVarVecIt;
 
+    // A map of array indices to the array pointer.
+    std::map<Value*,Value*> ArrIdxPtrs;
+
     // The 1-bit integer type we will use to store taint values.
     IntegerType* TaintIntType;
 
@@ -92,7 +95,8 @@ namespace {
                         "loadT",
                         &I);
 
-                RegToTaintVal[&I] = orInst;
+                //RegToTaintVal[&I] = orInst;
+                storeRegTaint(&I, orInst);
             }
 
 
@@ -137,7 +141,8 @@ namespace {
                     taintPHI->addIncoming(taintVal,srcBB);
                 }
 
-                RegToTaintVal[&I] = taintPHI; 
+                //RegToTaintVal[&I] = taintPHI; 
+                storeRegTaint(&I, taintPHI);
             }
 
 
@@ -152,13 +157,21 @@ namespace {
                         "unaryT",
                         &I);
 
-                // The BinaryOperator instruction is now the taint value for 
-                // instruction I; add it to the map.
-                RegToTaintVal[&I] = orInst;
+                //RegToTaintVal[&I] = orInst;
+                storeRegTaint(&I, orInst);
+            }
+
+
+            void visitICmpInst(ICmpInst &I) {
+                binaryOp(I);
             }
 
 
             void visitBinaryOperator(BinaryOperator &I) {
+                binaryOp(I);
+            }
+
+            void binaryOp(Instruction &I) {
 
                 Value* opA = I.getOperand(0);
                 Value* opB = I.getOperand(1);
@@ -178,10 +191,37 @@ namespace {
                         "binT",
                         &I);
 
-                // The BinaryOperator instruction is now the taint value for 
-                // instruction I; add it to the map.
-                RegToTaintVal[&I] = orInst;
+                //RegToTaintVal[&I] = orInst;
+                storeRegTaint(&I, orInst);
             }
+
+
+            void visitGetElementPtrInst(GetElementPtrInst &I) {
+
+                // Add entry for index to main array pointer.
+                Value* arrPtr = I.getPointerOperand();
+                errs() << "Adding alias to array: " << *arrPtr << "\n\twith ptr: " 
+                                << I << "\n";
+                ArrIdxPtrs[&I] = arrPtr;
+
+                // Taint value of this pointer is equal to the taint value of 
+                // the array being indexed.
+                Value* arrTaint = getRegOpTaintVal(arrPtr);
+                storeRegTaint(&I, arrTaint);
+  
+                Value* taintStoreAddr = getTaintAddrForMemAddr(&I);
+                if(taintStoreAddr == NULL) {
+                    taintStoreAddr = new AllocaInst(TaintIntType,
+                                                    "storeT",
+                                                    &I);
+                    AddrToTaintAddr[&I] = taintStoreAddr;
+                }
+                        
+                StoreInst *taintStore = new StoreInst(arrTaint,
+                                                      taintStoreAddr,
+                                                      false,
+                                                      &I);     
+          }
 
 
             // For now, since we only have main(), if we return a tainted
@@ -191,11 +231,13 @@ namespace {
                 BasicBlock* orig = I.getParent();
                 Function* f = orig->getParent();
 
+                /* Uncomment this section to treat the return from main() as a sink.*/
                 if(orig->getParent()->getName() == "main") {
                     // Returning from main is a sink, so handle that differently.
                     handleReturnFromMain(I);
                     return;
                 }
+                
 
                 // Store the return value's taint value at the correct GlobalVar 
                 // address for this instruction's function.
@@ -211,11 +253,9 @@ namespace {
                 GlobalVariable* taintAddr = FunctionToGlobalVarIt->second;
 
                 StoreInst *taintStore = new StoreInst(retTaint,
-                        taintAddr,
-                        false,
-                        &I);
-
-
+                                                      taintAddr,
+                                                      false,
+                                                      &I);
             }
 
 
@@ -258,12 +298,42 @@ namespace {
                 // Add instructions to store the taint values of the function parameters.
                 // (Only if it is a function internally defined).
                 Function* calledFunc = I.getCalledFunction();
-                if(DefinedFunctions.find(calledFunc) != DefinedFunctions.end()) 
+                
+                if(DefinedFunctions.find(calledFunc) != DefinedFunctions.end()) { 
                     insertParamTaintStore(I);
+                    insertReturnTaintLoad(I);
+                }
+                else if(calledFunc->getName() == "__isoc99_fscanf") {
+                    // fscanf is our source; need to taint the pointer address that is used to
+                    // store the input read from the specified file stream.
+                
+                    int numParams = I.getNumArgOperands(); 
+   
+                    // arg 1 = filestream, arg 2 = format string, arg 3+ = data
+                    for(int i = 2; i < numParams; i++) {
+                        Value* dataPtr = I.getOperand(i);
 
-                // Add an instruction to load the invoked function's return value's taint.
-                insertReturnTaintLoad(I);
-            }
+                        // Taint register value
+                        //RegToTaintVal[dataPtr] =  ConstantInt::get(TaintIntType,1,false);               
+                        errs() << "\tscanf param tainted: " << *dataPtr << "\n";
+                        storeRegTaint(dataPtr, ConstantInt::get(TaintIntType,1,false));
+
+                        // Store taint value into memory
+                        Value* taintStoreAddr = getTaintAddrForMemAddr(dataPtr);
+                        if(taintStoreAddr == NULL) {
+                            taintStoreAddr = new AllocaInst(TaintIntType,
+                                                            "storeT",
+                                                            &I);
+                            AddrToTaintAddr[dataPtr] = taintStoreAddr;
+                        }
+                        
+                        StoreInst *taintStore = new StoreInst(ConstantInt::get(TaintIntType,1,false),
+                                                              taintStoreAddr,
+                                                              false,
+                                                              &I);     
+                    } 
+                }
+           }
 
 
             void insertReturnTaintLoad(CallInst &I) {
@@ -287,22 +357,16 @@ namespace {
                 }
                 else {
                     // Taint values coming back from external function calls.
-                    // taintVal = ConstantInt::get(TaintIntType,1,false);               
-                    taintVal  = BinaryOperator::Create(Instruction::Or,
-                            ConstantInt::get(TaintIntType,1,false),
-                            ConstantInt::get(TaintIntType,1,false),
-                            "callT",
-                            it);
+                    taintVal = ConstantInt::get(TaintIntType,1,false);               
+                    //taintVal  = BinaryOperator::Create(Instruction::Or,
+                    //        ConstantInt::get(TaintIntType,1,false),
+                    //        ConstantInt::get(TaintIntType,1,false),
+                    //        "callT",
+                    //        it);
                 }
 
-                /* 
-                   BinaryOperator* orInst = BinaryOperator::Create(Instruction::Or,
-                   taintVal,
-                   ConstantInt::get(TaintIntType,0,false),
-                   "callT",
-                   it);
-                   */
-                RegToTaintVal[&I] = taintVal;
+                //RegToTaintVal[&I] = taintVal;
+                storeRegTaint(&I, taintVal);
             }
 
 
@@ -333,8 +397,54 @@ namespace {
             }
 
 
+            void visitBranchInst(BranchInst &I) {
+
+                if(I.isUnconditional()) 
+                    return;
+
+                // If branch condition is tainted, branch to abort BB.
+                BinaryOperator* orInst;
+
+                if(I.getNumSuccessors() == 2) { 
+                    Value* opATaint = getRegOpTaintVal(I.getSuccessor(0));
+                    Value* opBTaint = getRegOpTaintVal(I.getSuccessor(1));
+                    orInst = BinaryOperator::Create(Instruction::Or,
+                                                    opATaint,
+                                                    opBTaint,
+                                                    "branch_check",
+                                                    &I);
+               } 
+                else {
+                    Value* opATaint = getRegOpTaintVal(I.getSuccessor(0));
+                    orInst = BinaryOperator::Create(Instruction::Or,
+                                                    opATaint,
+                                                    ConstantInt::get(TaintIntType,0,false),
+                                                    "branch_check",
+                                                    &I);
+                }
+
+                BasicBlock* orig = I.getParent();
+                BasicBlock* continueBB = SplitBlock(orig,&I,taintPass);
+                continueBB->setName("cont_BB");
+
+                BranchInst* abortBr = BranchInst::Create(abortBB,
+                                                         continueBB,
+                                                         orInst,
+                                                         orig->getTerminator());                
+   
+                orig->getTerminator()->eraseFromParent();
+
+                assert(orig->getTerminator() != NULL && 
+                        "OrigBB has no terminator!");
+
+                assert(continueBB->getTerminator() != NULL && 
+                        "ContinueBB has no terminator!");
+ 
+            }
+
+            
             void visitInstruction(Instruction &I) {
-                //errs() << "=== Unknown instruction of type: " << I.getOpcodeName() << "\n";
+                errs() << "=== Unknown instruction of type: " << I.getOpcodeName() << "\n";
             }
 
 
@@ -386,6 +496,19 @@ namespace {
                 }
 
                 return regOpTaintVal;
+            }
+
+            void storeRegTaint(Value* reg, Value* taintVal) {
+
+                RegToTaintVal[reg] = taintVal;
+                ValToValIt = ArrIdxPtrs.find(reg);
+                if(ValToValIt != ArrIdxPtrs.end()) {
+                    // If reg is an index into an array, taint the array.
+
+                    Value* arr = ValToValIt->second;
+                    errs() << "Tainting array: " << *arr << "\n\t via ptr: " << *reg << "\n";
+                    RegToTaintVal[arr] = taintVal;
+                }
             }
         };
 
@@ -483,12 +606,16 @@ namespace {
                     it != DefinedFunctions.end(); it++) {
 
                 Function* f = *it;
+                
+                bool isMain = false;
+                if(f->getName() == "main") isMain = true;
+                
                 Function::ArgumentListType* argList = &f->getArgumentList();
 
                 // For each argument for Function f, we need to allocate a bit on the
                 // stack to store the argument's taint value.
                 std::vector<GlobalVariable*>* paramTaintAddrs = 
-                    new std::vector<GlobalVariable*>();
+                                            new std::vector<GlobalVariable*>();
                 for(unsigned int i = 0; i < argList->size(); i++) {
 
                     GlobalVariable* pTaint = new GlobalVariable(M,
@@ -498,10 +625,14 @@ namespace {
                             0,
                             "param_taint");
 
-                    ConstantInt* untaintedVal = ConstantInt::get(M.getContext(),
-                            APInt(1,StringRef("0"),10));
+                    ConstantInt* paramTaintVal = ConstantInt::get(M.getContext(),
+                                                                  APInt(1,StringRef("0"),10));
 
-                    pTaint->setInitializer(untaintedVal);
+                    // Taint program argument values.
+                    if(isMain) paramTaintVal = ConstantInt::get(M.getContext(),
+                                                                APInt(1,StringRef("1"),10));
+
+                    pTaint->setInitializer(paramTaintVal);
                     paramTaintAddrs->push_back(pTaint);
                 }
 

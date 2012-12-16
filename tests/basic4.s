@@ -45,19 +45,19 @@ main:                                   # @main
 	addl	%ecx, %eax
 	imull	$20, %eax, %eax
 	subl	%eax, %ebx
-	jmp	.LBB0_3
-.LBB0_1:
-	xorb	%bpl, %bpl
-	movl	$4, %ebx
-.LBB0_3:                                # %if.end
 	movq	stdout(%rip), %rdi
 	shll	$3, %ebx
 	movl	$.L.str1, %esi
 	movl	%ebx, %edx
 	xorb	%al, %al
 	callq	fprintf
-	testb	%bpl, %bpl
-	jne	.LBB0_5
+	jmp	.LBB0_3
+.LBB0_1:
+	xorb	%bpl, %bpl
+	movl	$4, %ebx
+.LBB0_3:                                # %return
+	cmpb	$1, %bpl
+	je	.LBB0_5
 # BB#4:                                 # %cont_BB
 	movl	%ebx, %eax
 	addq	$8, %rsp
@@ -67,6 +67,9 @@ main:                                   # @main
 	.align	16, 0x90
 .LBB0_5:                                # %abortBB
                                         # =>This Inner Loop Header: Depth=1
+	movl	$.L.str2, %edi
+	xorb	%al, %al
+	callq	printf
 	callq	exit
 	jmp	.LBB0_5
 .Ltmp8:
@@ -90,6 +93,12 @@ main:                                   # @main
 return_taint:
 	.byte	0                       # 0x0
 	.size	return_taint, 1
+
+	.type	.L.str2,@object         # @.str2
+	.section	.rodata,"a",@progbits
+.L.str2:
+	.asciz	 "Warning: tainted data in use!\n"
+	.size	.L.str2, 31
 
 
 	.section	".note.GNU-stack","",@progbits

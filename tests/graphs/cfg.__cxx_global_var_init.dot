@@ -1,0 +1,7 @@
+digraph "CFG for '__cxx_global_var_init' function" {
+	label="CFG for '__cxx_global_var_init' function";
+
+	Node0x1d5dd00 [shape=record,label="{entry:\l  call void @_ZNSt8ios_base4InitC1Ev(%\"class.std::ios_base::Init\"* @_ZStL8__ioinit)\l  %0 = call i32 @__cxa_atexit(void (i8*)* bitcast (void (%\"class.std::ios_base::Init\"*)* @_ZNSt8ios_base4InitD1Ev to void (i8*)*), i8* getelementptr inbounds (%\"class.std::ios_base::Init\"* @_ZStL8__ioinit, i32 0, i32 0), i8* @__dso_handle)\l  store i1 false, i1* @return_taint1\l  ret void\l}"];
+	Node0x1d5dd60 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str, i32 0, i32 0))\l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
+	Node0x1d5dd60 -> Node0x1d5dd60;
+}

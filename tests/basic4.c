@@ -14,6 +14,7 @@ int main() {
     }
     else {
         x = 4;
+        return x;
     }
 
     fprintf(stdout, "Expected return => %d\n", x*8);
