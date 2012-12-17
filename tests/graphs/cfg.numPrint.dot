@@ -1,7 +1,7 @@
 digraph "CFG for 'numPrint' function" {
 	label="CFG for 'numPrint' function";
 
-	Node0x2462890 [shape=record,label="{entry:\l  %param_taint_load = load i1* @param_taint\l  %call = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @.str, i32 0, i32 0), i8* %c)\l  store i1 false, i1* @return_taint\l  ret void\l}"];
-	Node0x24628f0 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str6, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
-	Node0x24628f0 -> Node0x24628f0;
+	Node0x24fa890 [shape=record,label="{entry:\l  %param_taint_load = load i1* @param_taint\l  %call = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @.str, i32 0, i32 0), i8* %c)\l  ret void\l}"];
+	Node0x24fa8f0 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str6, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
+	Node0x24fa8f0 -> Node0x24fa8f0;
 }

@@ -6,12 +6,6 @@
 doStuff:                                # @doStuff
 	.cfi_startproc
 # BB#0:                                 # %entry
-	movb	param_taint(%rip), %al
-	orb	%al, %al
-	movb	param_taint2(%rip), %cl
-	orb	%al, %cl
-	andb	$1, %cl
-	movb	%cl, return_taint(%rip)
 	leal	3(%rdi), %eax
 	imull	%edi, %eax
 	addl	%esi, %eax

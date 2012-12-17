@@ -1,10 +1,10 @@
 digraph "CFG for 'run' function" {
 	label="CFG for 'run' function";
 
-	Node0x245f6f0 [shape=record,label="{entry:\l  %param_taint_load = load i1* @param_taint3\l  %param_or = or i1 %param_taint_load, false\l  %protect_check = icmp eq i1 %param_or, true\l  br i1 %protect_check, label %abortBB, label %cont_BB\l|{<s0>T|<s1>F}}"];
-	Node0x245f6f0:s0 -> Node0x245f7b0;
-	Node0x245f6f0:s1 -> Node0x245f750;
-	Node0x245f750 [shape=record,label="{cont_BB:                                          \l  store i1 %param_taint_load, i1* @param_taint\l  call void @numPrint(i8* %c)\l  %retT_load = load i1* @return_taint\l  store i1 false, i1* @return_taint1\l  ret void\l}"];
-	Node0x245f7b0 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str7, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
-	Node0x245f7b0 -> Node0x245f7b0;
+	Node0x24f7660 [shape=record,label="{entry:\l  %param_taint_load = load i1* @param_taint3\l  %param_or = or i1 %param_taint_load, false\l  %protect_check = icmp eq i1 %param_or, true\l  br i1 %protect_check, label %abortBB, label %cont_BB\l|{<s0>T|<s1>F}}"];
+	Node0x24f7660:s0 -> Node0x24f7720;
+	Node0x24f7660:s1 -> Node0x24f76c0;
+	Node0x24f76c0 [shape=record,label="{cont_BB:                                          \l  store i1 %param_taint_load, i1* @param_taint\l  call void @numPrint(i8* %c)\l  %retT_load = load i1* @return_taint\l  store i1 false, i1* @return_taint1\l  ret void\l}"];
+	Node0x24f7720 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str7, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
+	Node0x24f7720 -> Node0x24f7720;
 }

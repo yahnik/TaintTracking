@@ -579,6 +579,14 @@ namespace {
         TaintInstVisitor TaintVis;
 
 
+        bool isSource(Instruction &I) {
+
+            if(SourceFunctions.find(I.getName()) == SourceFunctions.end())
+                return false;
+            return true;
+        }
+
+
         virtual bool runOnModule(Module &M) {
 
             taintPass = this;
@@ -611,14 +619,13 @@ namespace {
             for(Module::iterator m = M.begin(); m != M.end(); m++) {
 
                 Function* F = m;
-                //errs() << "Function = " << F->getName() << "\n";
                 // We only want to insert the abortBB into functions that are actually
                 // defined in the source code we are instrumenting. Since we are iterating
                 // over all function calls in the source, only add abortBB to a function
                 // once we have seen an instruction for that function.
                 bool foundInst = false;
-
-
+                bool hasSource = false;
+                
                 std::vector<Instruction*> funcInstList;
 
                 for(Function::iterator b = F->begin(); b != F->end(); b++) {
@@ -634,12 +641,17 @@ namespace {
                     // abortBB.                    
                     if(b->getName() == "abortBB") continue; 
                     for(BasicBlock::iterator i = b->begin(); i != b->end(); i++) {
+                        if(isSource(*i)) hasSource = true;
                         funcInstList.push_back(i);
                     }
                 }    
 
                 if(foundInst)
                     insertParamTaintLoads(F);
+
+                // If F is protected and has no source, skip over visiting its instructions.
+                if(!hasSource && ProtectedFunctions.find(F->getName()) != ProtectedFunctions.end())
+                    continue;
 
                 std::vector<Instruction*>::iterator instIt = funcInstList.begin();
                 for( ; instIt != funcInstList.end(); instIt++) {

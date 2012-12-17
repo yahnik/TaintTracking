@@ -14,7 +14,6 @@ numPrint:                               # @numPrint
 	movq	%rax, %rsi
 	xorb	%al, %al
 	callq	printf
-	movb	$0, return_taint(%rip)
 	popq	%rax
 	ret
 .Ltmp2:

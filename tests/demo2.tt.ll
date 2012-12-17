@@ -18,7 +18,6 @@ define void @numPrint(i8* %c) nounwind uwtable {
 entry:
   %param_taint_load = load i1* @param_taint
   %call = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([4 x i8]* @.str, i32 0, i32 0), i8* %c)
-  store i1 false, i1* @return_taint
   ret void
 
 abortBB:                                          ; preds = %abortBB

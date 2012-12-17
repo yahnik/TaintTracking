@@ -18,13 +18,9 @@ define i32 @doStuff(i32 %a, i32 %b) nounwind uwtable {
 entry:
   %param_taint_load1 = load i1* @param_taint2
   %param_taint_load = load i1* @param_taint
-  %binT = or i1 %param_taint_load, false
   %add = add nsw i32 %a, 3
-  %binT2 = or i1 %binT, %param_taint_load
   %mul = mul nsw i32 %add, %a
-  %binT3 = or i1 %binT2, %param_taint_load1
   %add1 = add nsw i32 %mul, %b
-  store i1 %binT3, i1* @return_taint
   ret i32 %add1
 
 abortBB:                                          ; preds = %abortBB
