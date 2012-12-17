@@ -3,13 +3,15 @@
 #include <time.h>
 #include <math.h>
 
+int doStuff(int x) { return x;}
+
 int main() {
 
     srand(time(NULL));
-    int x = rand()%10;
-    printf("x = %d\n", x); 
+    int x = rand();
+    
     if(x % 2)
-        x = pow(x,2.0);
+        x = doStuff(x);
     else
         x++;
 
