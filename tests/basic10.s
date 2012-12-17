@@ -1,4 +1,4 @@
-	.file	"basic5.tt.bc"
+	.file	"basic10.tt.bc"
 	.text
 	.globl	doStuff
 	.align	16, 0x90
@@ -8,7 +8,7 @@ doStuff:                                # @doStuff
 # BB#0:                                 # %entry
 	movb	param_taint(%rip), %al
 	movb	%al, return_taint1(%rip)
-	movl	%edi, %eax
+	leal	(%rdi,%rdi), %eax
 	ret
 .Ltmp0:
 	.size	doStuff, .Ltmp0-doStuff
@@ -28,45 +28,39 @@ main:                                   # @main
 	movl	%eax, %edi
 	callq	srand
 	callq	rand
-	xorb	%cl, %cl
-	testb	%cl, %cl
-	jne	.LBB1_6
-# BB#1:                                 # %cont_BB
 	movl	%eax, %ecx
 	shrl	$31, %ecx
 	addl	%eax, %ecx
 	andl	$-2, %ecx
 	movl	%eax, %edx
 	subl	%ecx, %edx
-	testl	%edx, %edx
-	je	.LBB1_4
+	je	.LBB1_1
 # BB#2:                                 # %if.then
+	movl	$1, %eax
+	xorb	%cl, %cl
+	jmp	.LBB1_3
+.LBB1_1:
 	movb	$1, %cl
-	testb	%cl, %cl
-	je	.LBB1_3
+.LBB1_3:                                # %if.end
+	cmpb	$1, %cl
+	je	.LBB1_5
+# BB#4:                                 # %cont_BB
+	movb	%cl, param_taint(%rip)
+	movl	%eax, %edi
+	callq	doStuff
+	movb	$0, return_taint(%rip)
+	xorl	%eax, %eax
+	popq	%rdx
+	ret
 	.align	16, 0x90
-.LBB1_6:                                # %abortBB
+.LBB1_5:                                # %abortBB
                                         # =>This Inner Loop Header: Depth=1
 	movl	$.L.str2, %edi
 	xorb	%al, %al
 	callq	printf
 	movl	$1, %edi
 	callq	exit
-	jmp	.LBB1_6
-.LBB1_4:                                # %if.else
-	incl	%eax
-	movb	$1, %cl
 	jmp	.LBB1_5
-.LBB1_3:                                # %cont_BB2
-	movb	$1, param_taint(%rip)
-	movl	%eax, %edi
-	callq	doStuff
-	movb	return_taint1(%rip), %cl
-.LBB1_5:                                # %if.end
-	andb	$1, %cl
-	movb	%cl, return_taint(%rip)
-	popq	%rdx
-	ret
 .Ltmp3:
 	.size	main, .Ltmp3-main
 	.cfi_endproc

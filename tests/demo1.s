@@ -41,34 +41,21 @@ main:                                   # @main
 	movl	$.L.str, %esi
 	xorb	%al, %al
 	callq	__isoc99_fscanf
-	testb	%bl, %bl
-	jne	.LBB1_5
-# BB#1:                                 # %cont_BB
 	movl	12(%rsp), %ecx
-	movl	%ecx, %eax
-	shrl	$31, %eax
-	addl	%ecx, %eax
-	andl	$-2, %eax
-	subl	%eax, %ecx
+	movl	%ecx, %edx
+	shrl	$31, %edx
+	addl	%ecx, %edx
 	movl	$5, %eax
-	testl	%ecx, %ecx
-	je	.LBB1_4
-# BB#2:                                 # %if.then
+	andl	$-2, %edx
+	subl	%edx, %ecx
+	je	.LBB1_3
+# BB#1:                                 # %if.then
 	movb	11(%rsp), %al
 	movb	%al, %cl
 	notb	%cl
 	testb	$1, %cl
-	jne	.LBB1_3
-	.align	16, 0x90
-.LBB1_5:                                # %abortBB
-                                        # =>This Inner Loop Header: Depth=1
-	movl	$.L.str4, %edi
-	xorb	%al, %al
-	callq	printf
-	movl	$1, %edi
-	callq	exit
-	jmp	.LBB1_5
-.LBB1_3:                                # %cont_BB5
+	je	.LBB1_4
+# BB#2:                                 # %cont_BB
 	movl	12(%rsp), %edi
 	andb	$1, %al
 	movb	%al, param_taint(%rip)
@@ -76,12 +63,21 @@ main:                                   # @main
 	movl	$3, %esi
 	callq	doStuff
 	movb	return_taint(%rip), %bl
-.LBB1_4:                                # %if.end
+.LBB1_3:                                # %if.end
 	andb	$1, %bl
 	movb	%bl, return_taint1(%rip)
 	addq	$16, %rsp
 	popq	%rbx
 	ret
+	.align	16, 0x90
+.LBB1_4:                                # %abortBB
+                                        # =>This Inner Loop Header: Depth=1
+	movl	$.L.str4, %edi
+	xorb	%al, %al
+	callq	printf
+	movl	$1, %edi
+	callq	exit
+	jmp	.LBB1_4
 .Ltmp6:
 	.size	main, .Ltmp6-main
 	.cfi_endproc

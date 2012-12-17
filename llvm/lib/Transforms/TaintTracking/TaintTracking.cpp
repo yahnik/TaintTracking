@@ -461,6 +461,11 @@ namespace {
                 if(I.getNumSuccessors() == 2) { 
                     Value* opATaint = getRegOpTaintVal(I.getSuccessor(0));
                     Value* opBTaint = getRegOpTaintVal(I.getSuccessor(1));
+            
+                    if(opATaint == ConstantInt::get(TaintIntType,0,false) &&
+                       opBTaint == ConstantInt::get(TaintIntType,0,false))
+                            return; 
+
                     orInst = BinaryOperator::Create(Instruction::Or,
                                                     opATaint,
                                                     opBTaint,
@@ -469,6 +474,10 @@ namespace {
                } 
                 else {
                     Value* opATaint = getRegOpTaintVal(I.getSuccessor(0));
+                    if(opATaint == ConstantInt::get(TaintIntType,0,false))
+                       return; 
+
+                 
                     orInst = BinaryOperator::Create(Instruction::Or,
                                                     opATaint,
                                                     ConstantInt::get(TaintIntType,0,false),

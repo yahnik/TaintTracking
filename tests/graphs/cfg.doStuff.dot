@@ -1,7 +1,7 @@
 digraph "CFG for 'doStuff' function" {
 	label="CFG for 'doStuff' function";
 
-	Node0x190ceb0 [shape=record,label="{entry:\l  %param_taint_load1 = load i1* @param_taint2\l  %param_taint_load = load i1* @param_taint\l  %binT = or i1 %param_taint_load, false\l  %add = add nsw i32 %a, 3\l  %binT2 = or i1 %binT, %param_taint_load\l  %mul = mul nsw i32 %add, %a\l  %binT3 = or i1 %binT2, %param_taint_load1\l  %add1 = add nsw i32 %mul, %b\l  store i1 %binT3, i1* @return_taint\l  ret i32 %add1\l}"];
-	Node0x190c890 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str3, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
-	Node0x190c890 -> Node0x190c890;
+	Node0xfc6eb0 [shape=record,label="{entry:\l  %param_taint_load1 = load i1* @param_taint2\l  %param_taint_load = load i1* @param_taint\l  %binT = or i1 %param_taint_load, false\l  %add = add nsw i32 %a, 3\l  %binT2 = or i1 %binT, %param_taint_load\l  %mul = mul nsw i32 %add, %a\l  %binT3 = or i1 %binT2, %param_taint_load1\l  %add1 = add nsw i32 %mul, %b\l  store i1 %binT3, i1* @return_taint\l  ret i32 %add1\l}"];
+	Node0xfc6890 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str3, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
+	Node0xfc6890 -> Node0xfc6890;
 }

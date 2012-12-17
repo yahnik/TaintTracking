@@ -1,0 +1,7 @@
+digraph "CFG for 'sumPrint' function" {
+	label="CFG for 'sumPrint' function";
+
+	Node0x149cf40 [shape=record,label="{entry:\l  %param_taint_load1 = load i1* @param_taint5\l  %param_taint_load = load i1* @param_taint4\l  %binT = or i1 %param_taint_load, %param_taint_load1\l  %add = add nsw i32 %a, %b\l  %call = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([10 x i8]* @.str, i32 0, i32 0), i32 %add)\l  store i1 false, i1* @return_taint1\l  ret void\l}"];
+	Node0x149cfa0 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str7, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
+	Node0x149cfa0 -> Node0x149cfa0;
+}

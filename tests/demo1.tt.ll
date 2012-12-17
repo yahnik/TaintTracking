@@ -49,34 +49,30 @@ entry:
   %rem = srem i32 %1, 2
   %binT2 = or i1 %binT, false
   %tobool = icmp ne i32 %rem, 0
-  %branch_check = or i1 false, false
-  br i1 %branch_check, label %abortBB, label %cont_BB
-
-cont_BB:                                          ; preds = %entry
   br i1 %tobool, label %if.then, label %if.end
 
-if.then:                                          ; preds = %cont_BB
+if.then:                                          ; preds = %entry
   %taint_load3 = load i1* %storeTc
   %loadT4 = or i1 %taint_load3, false
   %2 = load i32* %x, align 4
   %param_or = or i1 %loadT4, false
   %protect_check = icmp eq i1 %param_or, true
-  br i1 %protect_check, label %abortBB, label %cont_BB5
+  br i1 %protect_check, label %abortBB, label %cont_BB
 
-cont_BB5:                                         ; preds = %if.then
+cont_BB:                                          ; preds = %if.then
   store i1 %loadT4, i1* @param_taint
   store i1 false, i1* @param_taint2
   %call1 = call i32 @doStuff(i32 %2, i32 3)
   %retT_load = load i1* @return_taint
   br label %if.end
 
-if.end:                                           ; preds = %cont_BB5, %cont_BB
-  %taintPHI = phi i1 [ %retT_load, %cont_BB5 ], [ false, %cont_BB ]
-  %w.0 = phi i32 [ %call1, %cont_BB5 ], [ 5, %cont_BB ]
+if.end:                                           ; preds = %cont_BB, %entry
+  %taintPHI = phi i1 [ %retT_load, %cont_BB ], [ false, %entry ]
+  %w.0 = phi i32 [ %call1, %cont_BB ], [ 5, %entry ]
   store i1 %taintPHI, i1* @return_taint1
   ret i32 %w.0
 
-abortBB:                                          ; preds = %abortBB, %if.then, %entry
+abortBB:                                          ; preds = %abortBB, %if.then
   %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str4, i32 0, i32 0))
   call void @exit(i32 1)
   br label %abortBB

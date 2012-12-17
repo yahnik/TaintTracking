@@ -1,0 +1,18 @@
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+
+	Node0x1c3ecc0 [shape=record,label="{entry:\l  %call = call i64 @time(i64* null) nounwind\l  %unaryT = or i1 false, false\l  %conv = trunc i64 %call to i32\l  call void @srand(i32 %conv) nounwind\l  %call1 = call i32 @rand() nounwind\l  %binT = or i1 true, false\l  %rem = srem i32 %call1, 2\l  %binT1 = or i1 %binT, false\l  %tobool = icmp ne i32 %rem, 0\l  %branch_check = or i1 false, false\l  br i1 %branch_check, label %abortBB, label %cont_BB\l|{<s0>T|<s1>F}}"];
+	Node0x1c3ecc0:s0 -> Node0x1c3eea0;
+	Node0x1c3ecc0:s1 -> Node0x1c3ed20;
+	Node0x1c3ed20 [shape=record,label="{cont_BB:                                          \l  br i1 %tobool, label %if.then, label %if.end\l|{<s0>T|<s1>F}}"];
+	Node0x1c3ed20:s0 -> Node0x1c3ed80;
+	Node0x1c3ed20:s1 -> Node0x1c3ede0;
+	Node0x1c3ed80 [shape=record,label="{if.then:                                          \l  br label %if.end\l}"];
+	Node0x1c3ed80 -> Node0x1c3ede0;
+	Node0x1c3ede0 [shape=record,label="{if.end:                                           \l  %taintPHI = phi i1 [ false, %if.then ], [ true, %cont_BB ]\l  %x.0 = phi i32 [ 1, %if.then ], [ %call1, %cont_BB ]\l  %param_or = or i1 %taintPHI, false\l  %protect_check = icmp eq i1 %param_or, true\l  br i1 %protect_check, label %abortBB, label %cont_BB2\l|{<s0>T|<s1>F}}"];
+	Node0x1c3ede0:s0 -> Node0x1c3eea0;
+	Node0x1c3ede0:s1 -> Node0x1c3ee40;
+	Node0x1c3ee40 [shape=record,label="{cont_BB2:                                         \l  store i1 %taintPHI, i1* @param_taint\l  %call2 = call i32 @doStuff(i32 %x.0)\l  %retT_load = load i1* @return_taint1\l  store i1 false, i1* @return_taint\l  ret i32 0\l}"];
+	Node0x1c3eea0 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str2, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
+	Node0x1c3eea0 -> Node0x1c3eea0;
+}
