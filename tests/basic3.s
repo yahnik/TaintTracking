@@ -26,90 +26,71 @@ doStuff:                                # @doStuff
 main:                                   # @main
 	.cfi_startproc
 # BB#0:                                 # %entry
-	pushq	%rbp
-.Ltmp4:
-	.cfi_def_cfa_offset 16
 	pushq	%rbx
-.Ltmp5:
-	.cfi_def_cfa_offset 24
-	pushq	%rax
-.Ltmp6:
+.Ltmp3:
+	.cfi_def_cfa_offset 16
+	subq	$16, %rsp
+.Ltmp4:
 	.cfi_def_cfa_offset 32
-.Ltmp7:
-	.cfi_offset %rbx, -24
-.Ltmp8:
-	.cfi_offset %rbp, -16
-	xorl	%edi, %edi
-	callq	time
-	movl	%eax, %edi
-	callq	srand
-	callq	rand
-	movslq	%eax, %rdi
-	imulq	$1717986919, %rdi, %rax # imm = 0x66666667
-	movq	%rax, %rcx
-	shrq	$63, %rcx
-	sarq	$35, %rax
-	addl	%ecx, %eax
-	imull	$20, %eax, %eax
-	subl	%eax, %edi
-	movl	%edi, %eax
-	shrl	$31, %eax
-	addl	%edi, %eax
-	andl	$-2, %eax
-	movl	%edi, %ecx
-	subl	%eax, %ecx
-	je	.LBB1_2
-# BB#1:                                 # %if.then
-	movl	$5, %ebx
-	xorb	%bpl, %bpl
-	movl	$.L.str, %edi
-	movl	$5, %esi
-	jmp	.LBB1_3
-.LBB1_2:                                # %if.end
-	movb	$1, %al
-	movb	%al, param_taint(%rip)
-	movb	$0, param_taint2(%rip)
-                                        # kill: EDI<def> EDI<kill> RDI<kill>
-	movl	$5, %esi
-	callq	doStuff
-	movl	%eax, %ebx
-	movb	return_taint(%rip), %bpl
-	movl	$.L.str1, %edi
-	movl	%ebx, %esi
-.LBB1_3:                                # %if.end
+.Ltmp5:
+	.cfi_offset %rbx, -16
+	movq	stdin(%rip), %rdi
+	movb	$1, 11(%rsp)
+	leaq	12(%rsp), %rdx
+	xorb	%bl, %bl
+	movl	$.L.str, %esi
 	xorb	%al, %al
-	callq	printf
-	notb	%bpl
-	testb	$1, %bpl
-	je	.LBB1_5
-# BB#4:                                 # %cont_BB
-	movl	%ebx, %eax
-	addq	$8, %rsp
-	popq	%rbx
-	popq	%rbp
-	ret
+	callq	__isoc99_fscanf
+	testb	%bl, %bl
+	jne	.LBB1_5
+# BB#1:                                 # %cont_BB
+	movl	12(%rsp), %ecx
+	movl	%ecx, %eax
+	shrl	$31, %eax
+	addl	%ecx, %eax
+	andl	$-2, %eax
+	subl	%eax, %ecx
+	movl	$5, %eax
+	testl	%ecx, %ecx
+	je	.LBB1_4
+# BB#2:                                 # %if.then
+	movb	11(%rsp), %al
+	movb	%al, %cl
+	notb	%cl
+	testb	$1, %cl
+	jne	.LBB1_3
 	.align	16, 0x90
 .LBB1_5:                                # %abortBB
                                         # =>This Inner Loop Header: Depth=1
 	movl	$.L.str4, %edi
 	xorb	%al, %al
 	callq	printf
+	movl	$1, %edi
 	callq	exit
 	jmp	.LBB1_5
-.Ltmp9:
-	.size	main, .Ltmp9-main
+.LBB1_3:                                # %cont_BB5
+	movl	12(%rsp), %edi
+	andb	$1, %al
+	movb	%al, param_taint(%rip)
+	movb	$0, param_taint2(%rip)
+	movl	$3, %esi
+	callq	doStuff
+	movb	return_taint(%rip), %bl
+.LBB1_4:                                # %if.end
+	andb	$1, %bl
+	movb	%bl, return_taint1(%rip)
+	addq	$16, %rsp
+	popq	%rbx
+	ret
+.Ltmp6:
+	.size	main, .Ltmp6-main
 	.cfi_endproc
 
 	.type	.L.str,@object          # @.str
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .L.str:
-	.asciz	 "Y = %d\n"
-	.size	.L.str, 8
-
-	.type	.L.str1,@object         # @.str1
-.L.str1:
-	.asciz	 "W = %d\n"
-	.size	.L.str1, 8
+	.asciz	 "%d"
+	.size	.L.str, 3
 
 	.type	return_taint,@object    # @return_taint
 	.bss

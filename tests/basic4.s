@@ -24,12 +24,18 @@ main:                                   # @main
 	movl	%eax, %edi
 	callq	srand
 	callq	rand
+	xorb	%bpl, %bpl
+	testb	%bpl, %bpl
+	jne	.LBB0_4
+# BB#1:                                 # %cont_BB
 	movl	%eax, %ecx
 	shrl	$31, %ecx
 	addl	%eax, %ecx
 	andl	$-2, %ecx
 	subl	%ecx, %eax
-	je	.LBB0_1
+	movl	$4, %ebx
+	testl	%eax, %eax
+	je	.LBB0_3
 # BB#2:                                 # %if.then
 	movq	stdout(%rip), %rdi
 	movl	$.L.str, %esi
@@ -51,27 +57,22 @@ main:                                   # @main
 	movl	%ebx, %edx
 	xorb	%al, %al
 	callq	fprintf
-	jmp	.LBB0_3
-.LBB0_1:
-	xorb	%bpl, %bpl
-	movl	$4, %ebx
 .LBB0_3:                                # %return
-	cmpb	$1, %bpl
-	je	.LBB0_5
-# BB#4:                                 # %cont_BB
+	movb	%bpl, return_taint(%rip)
 	movl	%ebx, %eax
 	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret
 	.align	16, 0x90
-.LBB0_5:                                # %abortBB
+.LBB0_4:                                # %abortBB
                                         # =>This Inner Loop Header: Depth=1
 	movl	$.L.str2, %edi
 	xorb	%al, %al
 	callq	printf
+	movl	$1, %edi
 	callq	exit
-	jmp	.LBB0_5
+	jmp	.LBB0_4
 .Ltmp8:
 	.size	main, .Ltmp8-main
 	.cfi_endproc

@@ -13,19 +13,15 @@ entry:
   %binT1 = or i1 %binT, false
   %inc = add nsw i32 %mul, 1
   %call = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([8 x i8]* @.str, i32 0, i32 0), i32 %inc)
-  %callT = or i1 true, true
-  %taint_check = icmp eq i1 %binT1, true
-  br i1 %taint_check, label %abortBB, label %cont_BB
-
-cont_BB:                                          ; preds = %entry
+  store i1 %binT1, i1* @return_taint
   ret i32 %inc
 
-abortBB:                                          ; preds = %abortBB, %entry
+abortBB:                                          ; preds = %abortBB
   %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str1, i32 0, i32 0))
-  %exit = call i32 @exit()
+  call void @exit(i32 1)
   br label %abortBB
 }
 
 declare i32 @printf(i8*, ...)
 
-declare i32 @exit()
+declare void @exit(i32) noreturn nounwind

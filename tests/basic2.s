@@ -42,7 +42,6 @@ main:                                   # @main
 	testb	%bpl, %bpl
 	jne	.LBB0_5
 # BB#1:                                 # %cont_BB
-	movb	$1, %bpl
 	movl	%ebx, %eax
 	shrl	$31, %eax
 	addl	%ebx, %eax
@@ -61,6 +60,7 @@ main:                                   # @main
 	movl	$.L.str3, %edi
 	xorb	%al, %al
 	callq	printf
+	movl	$1, %edi
 	callq	exit
 	jmp	.LBB0_5
 .LBB0_3:                                # %if.else
@@ -69,6 +69,7 @@ main:                                   # @main
 .LBB0_4:                                # %if.else
 	xorb	%al, %al
 	callq	fprintf
+	andb	$1, %bpl
 	movb	%bpl, return_taint(%rip)
 	shll	$3, %ebx
 	movl	%ebx, %eax

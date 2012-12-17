@@ -6,32 +6,19 @@
 main:                                   # @main
 	.cfi_startproc
 # BB#0:                                 # %entry
-	pushq	%rbx
-.Ltmp2:
+	pushq	%rax
+.Ltmp1:
 	.cfi_def_cfa_offset 16
-.Ltmp3:
-	.cfi_offset %rbx, -16
-	xorb	%bl, %bl
 	movl	$.L.str, %edi
 	movl	$31, %esi
 	xorb	%al, %al
 	callq	printf
-	testb	%bl, %bl
-	jne	.LBB0_2
-# BB#1:                                 # %cont_BB
+	movb	$0, return_taint(%rip)
 	movl	$31, %eax
-	popq	%rbx
+	popq	%rdx
 	ret
-	.align	16, 0x90
-.LBB0_2:                                # %abortBB
-                                        # =>This Inner Loop Header: Depth=1
-	movl	$.L.str1, %edi
-	xorb	%al, %al
-	callq	printf
-	callq	exit
-	jmp	.LBB0_2
-.Ltmp4:
-	.size	main, .Ltmp4-main
+.Ltmp2:
+	.size	main, .Ltmp2-main
 	.cfi_endproc
 
 	.type	.L.str,@object          # @.str

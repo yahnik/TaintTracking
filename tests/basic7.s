@@ -28,7 +28,7 @@ main:                                   # @main
 	movb	$0, 2(%rsp)
 	movl	$4, 8(%rsp)
 	testb	%bl, %bl
-	jne	.LBB0_6
+	jne	.LBB0_5
 # BB#1:                                 # %cont_BB
 	movl	12(%rsp), %eax
 	movl	%eax, %ecx
@@ -43,6 +43,15 @@ main:                                   # @main
 	movb	3(%rsp), %cl
 	movb	%cl, 2(%rsp)
 	jmp	.LBB0_4
+	.align	16, 0x90
+.LBB0_5:                                # %abortBB
+                                        # =>This Inner Loop Header: Depth=1
+	movl	$.L.str1, %edi
+	xorb	%al, %al
+	callq	printf
+	movl	$1, %edi
+	callq	exit
+	jmp	.LBB0_5
 .LBB0_3:                                # %if.else
 	movl	8(%rsp), %eax
 	movb	2(%rsp), %cl
@@ -50,19 +59,9 @@ main:                                   # @main
 	incl	%eax
 .LBB0_4:                                # %if.else
 	movl	%eax, 8(%rsp)
-	movb	2(%rsp), %al
-	testb	%al, %al
-	je	.LBB0_5
-	.align	16, 0x90
-.LBB0_6:                                # %abortBB
-                                        # =>This Inner Loop Header: Depth=1
-	movl	$.L.str1, %edi
-	xorb	%al, %al
-	callq	printf
-	callq	exit
-	jmp	.LBB0_6
-.LBB0_5:                                # %cont_BB14
 	movl	8(%rsp), %eax
+	movb	2(%rsp), %cl
+	movb	%cl, return_taint(%rip)
 	addq	$16, %rsp
 	popq	%rbx
 	ret

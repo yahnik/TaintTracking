@@ -9,6 +9,8 @@ testname=$1
 echo "Test name = $testname" 
 echo ""
 
+clang -o $testname.exe $testname.c -lm
+
 clang -emit-llvm -o $testname.bc -c $testname.c || 
     { echo "Failed to emit llvm bytecode."; exit 1; }
 
@@ -18,7 +20,7 @@ echo ""
 
 opt -mem2reg $testname.bc > $testname.reg.bc
 
-opt -load $PROJ_OBJ_ROOT/Release+Asserts/lib/TaintTracking.so -TaintTracking < $testname.reg.bc > $testname.tt.bc ||
+opt -load $PROJ_OBJ_ROOT/Release+Asserts/lib/TaintTracking.so -TaintTracking -protected-functions -user-sources < $testname.reg.bc > $testname.tt.bc ||
     { echo "Failed to run Taint Tracking pass."; exit 1; }
 
 llvm-dis $testname.tt.bc
@@ -30,7 +32,7 @@ echo ""
 
 llc $testname.tt.bc -o $testname.s
 
-g++ -o $testname.tt.exe $testname.s || { echo "Failed to build executable."; exit 1; }
+g++ -o $testname.tt.exe $testname.s -lm || { echo "Failed to build executable."; exit 1; }
 
 echo "======================================================="
 echo "Executing program..."

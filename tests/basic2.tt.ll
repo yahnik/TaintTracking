@@ -15,11 +15,11 @@ target triple = "x86_64-unknown-linux-gnu"
 define i32 @main() nounwind uwtable {
 entry:
   %call = call i64 @time(i64* null) nounwind
-  %unaryT = or i1 true, false
+  %unaryT = or i1 false, false
   %conv = trunc i64 %call to i32
   call void @srand(i32 %conv) nounwind
   %call1 = call i64 @random() nounwind
-  %binT = or i1 true, false
+  %binT = or i1 false, false
   %rem = srem i64 %call1, 20
   %unaryT1 = or i1 %binT, false
   %conv2 = trunc i64 %rem to i32
@@ -56,7 +56,7 @@ if.end:                                           ; preds = %if.else, %if.then
 
 abortBB:                                          ; preds = %abortBB, %entry
   %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str3, i32 0, i32 0))
-  %exit = call i32 @exit()
+  call void @exit(i32 1)
   br label %abortBB
 }
 
@@ -70,4 +70,4 @@ declare i32 @fprintf(%struct._IO_FILE*, i8*, ...)
 
 declare i32 @printf(i8*, ...)
 
-declare i32 @exit()
+declare void @exit(i32) noreturn nounwind

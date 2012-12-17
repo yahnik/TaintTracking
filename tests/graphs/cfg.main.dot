@@ -1,18 +1,17 @@
 digraph "CFG for 'main' function" {
 	label="CFG for 'main' function";
 
-	Node0x2c77b40 [shape=record,label="{entry:\l  %param_taint_load1 = load i1* @param_taint1\l  %param_taint_load = load i1* @param_taint\l  %binT = or i1 %param_taint_load, false\l  %cmp = icmp sgt i32 %argc, 1\l  %branch_check = or i1 false, false\l  br i1 %branch_check, label %abortBB, label %cont_BB\l|{<s0>T|<s1>F}}"];
-	Node0x2c77b40:s0 -> Node0x2c77d20;
-	Node0x2c77b40:s1 -> Node0x2c77ba0;
-	Node0x2c77ba0 [shape=record,label="{cont_BB:                                          \l  br i1 %cmp, label %if.then, label %if.end\l|{<s0>T|<s1>F}}"];
-	Node0x2c77ba0:s0 -> Node0x2c77c00;
-	Node0x2c77ba0:s1 -> Node0x2c77c60;
-	Node0x2c77c00 [shape=record,label="{if.then:                                          \l  %storeT = alloca i1\l  store i1 %param_taint_load1, i1* %storeT\l  %arrayidx = getelementptr inbounds i8** %argv, i64 1\l  %taint_load = load i1* %storeT\l  %loadT = or i1 %taint_load, false\l  %0 = load i8** %arrayidx, align 8\l  br label %if.end\l}"];
-	Node0x2c77c00 -> Node0x2c77c60;
-	Node0x2c77c60 [shape=record,label="{if.end:                                           \l  %taintPHI = phi i1 [ %loadT, %if.then ], [ false, %cont_BB ]\l  %c.0 = phi i8* [ %0, %if.then ], [ getelementptr inbounds ([6 x i8]* @.str, i32 0, i32 0), %cont_BB ]\l  %unaryT = or i1 %taintPHI, false\l  %1 = ptrtoint i8* %c.0 to i32\l  %binT2 = or i1 %unaryT, false\l  %mul = mul nsw i32 %1, 0\l  %binT3 = or i1 %binT2, false\l  %add = add nsw i32 %mul, 5\l  %taint_check = icmp eq i1 %binT3, true\l  br i1 %taint_check, label %abortBB, label %cont_BB4\l|{<s0>T|<s1>F}}"];
-	Node0x2c77c60:s0 -> Node0x2c77d20;
-	Node0x2c77c60:s1 -> Node0x2c77cc0;
-	Node0x2c77cc0 [shape=record,label="{cont_BB4:                                         \l  ret i32 %add\l}"];
-	Node0x2c77d20 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str2, i32 0, i32 0))\l  %exit = call i32 @exit()\l  br label %abortBB\l}"];
-	Node0x2c77d20 -> Node0x2c77d20;
+	Node0x174a1f0 [shape=record,label="{entry:\l  %call = call i64 @time(i64* null) nounwind\l  %unaryT = or i1 false, false\l  %conv = trunc i64 %call to i32\l  call void @srand(i32 %conv) nounwind\l  %call1 = call i32 @rand() nounwind\l  %binT = or i1 true, false\l  %rem = srem i32 %call1, 10\l  %call2 = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([8 x i8]* @.str, i32 0, i32 0), i32 %rem)\l  %binT1 = or i1 %binT, false\l  %rem3 = srem i32 %rem, 2\l  %binT2 = or i1 %binT1, false\l  %tobool = icmp ne i32 %rem3, 0\l  %branch_check = or i1 false, false\l  br i1 %branch_check, label %abortBB, label %cont_BB\l|{<s0>T|<s1>F}}"];
+	Node0x174a1f0:s0 -> Node0x1748fa0;
+	Node0x174a1f0:s1 -> Node0x1748e20;
+	Node0x1748e20 [shape=record,label="{cont_BB:                                          \l  br i1 %tobool, label %if.then, label %if.else\l|{<s0>T|<s1>F}}"];
+	Node0x1748e20:s0 -> Node0x1748e80;
+	Node0x1748e20:s1 -> Node0x1748ee0;
+	Node0x1748e80 [shape=record,label="{if.then:                                          \l  %unaryT3 = or i1 %binT, false\l  %conv4 = sitofp i32 %rem to double\l  %0 = call double @llvm.pow.f64(double %conv4, double 2.000000e+00)\l  %unaryT4 = or i1 false, false\l  %conv5 = fptosi double %0 to i32\l  br label %if.end\l}"];
+	Node0x1748e80 -> Node0x1748f40;
+	Node0x1748ee0 [shape=record,label="{if.else:                                          \l  %binT5 = or i1 %binT, false\l  %inc = add nsw i32 %rem, 1\l  br label %if.end\l}"];
+	Node0x1748ee0 -> Node0x1748f40;
+	Node0x1748f40 [shape=record,label="{if.end:                                           \l  %taintPHI = phi i1 [ %unaryT4, %if.then ], [ %binT5, %if.else ]\l  %x.0 = phi i32 [ %conv5, %if.then ], [ %inc, %if.else ]\l  store i1 %taintPHI, i1* @return_taint\l  ret i32 %x.0\l}"];
+	Node0x1748fa0 [shape=record,label="{abortBB:                                          \l  %warn_printf = call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([31 x i8]* @.str1, i32 0, i32 0))\l  call void @exit(i32 1)\l  br label %abortBB\l}"];
+	Node0x1748fa0 -> Node0x1748fa0;
 }

@@ -1,24 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-
-int doStuff(int a) {
-    
-    int c = (a+3)*(a);
-
-    return c;
-}
-
+#include <math.h>
 
 int main() {
 
     srand(time(NULL));
-    int x;
-    //x = rand()%20;
-    x = 5;
+    int x = rand()%10;
+    printf("x = %d\n", x); 
+    if(x % 2)
+        x = pow(x,2.0);
+    else
+        x++;
 
-    int w = doStuff(x);
-
-    printf("Expected program return value = %d\n", w);
-    return w;
+    return x;
 }

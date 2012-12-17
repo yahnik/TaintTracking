@@ -2,8 +2,13 @@
     -sinks (branches or printf)
         -list of "protected" functions
     -sources (fscanf, argv) 
+        -list of sources
+
 
 - Optimizations
     - Extra pass across all functions to check for external function call
         If no, don't bother instrumenting that function.
-    - don't add instruction to taint check F or F
+    - Don't instrument protected functions
+
+- Demo
+    -basic3.c shows fscanf as source and can protect doStuff
